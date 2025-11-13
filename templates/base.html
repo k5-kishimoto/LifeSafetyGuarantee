@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Django Member Site{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>会員サイト</h1>
+        {% if user.is_authenticated %}
+            <p>ようこそ、{{ user.username }}さん！ (<a href="{% url 'logout' %}">ログアウト</a>)</p>
+        {% else %}
+            <p><a href="{% url 'login' %}">ログイン</a> | <a href="{% url 'signup' %}">サインアップ</a></p>
+        {% endif %}
+    </header>
+    <hr>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

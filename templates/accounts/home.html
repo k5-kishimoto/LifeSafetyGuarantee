@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}ホーム{% endblock %}
+
+{% block content %}
+<h2>会員ホーム</h2>
+<p>このページはログインしたユーザーのみが閲覧できます。</p>
+
+{% if user.is_authenticated %}
+    <p>ユーザー名: **{{ user.username }}**</p>
+    {% endif %}
+
+<p><a href="{% url 'logout' %}">ログアウトする</a></p>
+{% endblock %}
