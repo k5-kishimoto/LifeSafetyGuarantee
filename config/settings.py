@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # --- ここから追加 ---
+    'widget_tweaks',
     'accounts',
     # --- ここまで追加 ---
 ]

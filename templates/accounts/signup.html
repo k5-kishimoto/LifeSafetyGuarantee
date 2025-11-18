@@ -1,12 +1,72 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
-{% block title %}サインアップ{% endblock %}
+{% block title %}入居者届出{% endblock %}
 
 {% block content %}
-<h2>サインアップ</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">登録</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        
+        {% if bukken_name %}
+        <div class="alert alert-info text-center shadow-sm" role="alert">
+            <h4 class="mb-0">
+                **{{ bukken_name }}** へようこそ！
+            </h4>
+            {% if gyousya_id %}
+            <p class="small mt-1 mb-0 text-muted">関連業者ID: {{ gyousya_id }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="mb-0">入居者届出 📝</h3>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+
+                <h5 class="card-title text-center text-muted mb-4">アカウント情報をご入力ください</h5>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if next_url %}
+                        <input type="hidden" name="next" value="{{ next_url }}">
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field|add_class:"form-control" }}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">アカウントを作成し、入居者登録を完了する</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card-footer text-center py-3">
+                <p class="mb-0">アカウントをお持ちですか？ <a href="{% url 'login' %}">ログインはこちら</a></p>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

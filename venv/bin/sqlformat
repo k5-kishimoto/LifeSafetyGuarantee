@@ -1,4 +1,4 @@
-#!/home/lifedx/Project/Python/LifeSafetyGuarantee/venv/bin/python3
+#!/home/lifedx/projects/python/LifeSafetyGuarantee/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

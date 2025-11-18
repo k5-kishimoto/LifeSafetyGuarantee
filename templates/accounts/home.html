@@ -1,14 +1,84 @@
 {% extends 'base.html' %}
 
-{% block title %}ホーム{% endblock %}
+{% block title %}会員ダッシュボード{% endblock %}
 
 {% block content %}
-<h2>会員ホーム</h2>
-<p>このページはログインしたユーザーのみが閲覧できます。</p>
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="display-6 text-primary mb-3">ようこそ、{{ user.username }}さん！ 👋</h2>
+        <p class="lead text-muted">こちらは会員専用のホーム画面です。あなたの情報を確認し、必要な手続きを行ってください。</p>
+        <hr>
+    </div>
+</div>
 
-{% if user.is_authenticated %}
-    <p>ユーザー名: **{{ user.username }}**</p>
-    {% endif %}
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">🔑 アカウント情報</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>ユーザー名 (ログインID)</strong>
+                        <span>{{ user.username }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>氏名</strong>
+                        <span>{{ user.last_name }} {{ user.first_name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>メールアドレス</strong>
+                        <span>{{ user.email|default:"未登録" }}</span>
+                    </li>
+                    
+                    {% if user.department %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>部署名</strong>
+                        <span>{{ user.department }}</span>
+                    </li>
+                    {% endif %}
 
-<p><a href="{% url 'logout' %}">ログアウトする</a></p>
+                    {% if user.birthday %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>生年月日</strong>
+                        <span>{{ user.birthday }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="card-footer text-muted small">
+                最終ログイン: {{ user.last_login|default:"N/A"|date:"Y年m月d日 H:i" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm bg-warning-subtle h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div>
+                    <h5 class="card-title">⚙️ アクションメニュー</h5>
+                    <p class="card-text text-muted small">アカウントの管理や設定変更が可能です。</p>
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="#" class="btn btn-outline-primary">プロフィール編集</a>
+                        <a href="#" class="btn btn-outline-secondary">パスワード変更</a>
+                        </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <h5 class="card-title text-danger">⚠️ ログアウト</h5>
+                    <p class="card-text small">セッションを終了して安全にログアウトします。</p>
+                    <div class="d-grid">
+                        <a href="{% url 'logout' %}" class="btn btn-danger btn-lg">
+                            <i class="bi bi-box-arrow-right"></i> ログアウトする
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
