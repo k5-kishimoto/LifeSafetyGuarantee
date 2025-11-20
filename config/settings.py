@@ -35,7 +35,17 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'default-insecure-key-for-local')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 環境変数には 'host1,host2,host3' の形式で設定します。
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = ALLOWED_HOSTS_ENV.split(',')
+else:
+    # デフォルトのローカル設定
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'lifesafetyguarantee.fly.dev']
+
+# 開発中は以下のように設定してデバッグ情報を確認しても良い
+# DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
 # Application definition

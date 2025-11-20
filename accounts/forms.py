@@ -40,11 +40,10 @@ class CustomUserCreationForm(UserCreationForm):
             'username', 
             'first_name', 
             'last_name', 
-            'email',
             'birthday', 
         )
         
         # 💡 username のラベルを日本語に設定
         labels = {
-            'username': 'ユーザー名',
+            'username': 'ユーザ名・メールアドレス',
         }
