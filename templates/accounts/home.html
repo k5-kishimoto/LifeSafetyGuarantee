@@ -24,22 +24,14 @@
                         <strong>ユーザー名 (ログインID)</strong>
                         <span>{{ user.username }}</span>
                     </li>
+                    {% if contractor_info %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <strong>氏名</strong>
-                        <span>{{ user.last_name }} {{ user.first_name }}</span>
+                        <span>{{ contractor_info.last_name }} {{ contractor_info.first_name }}</span>
                     </li>
-                    
-                    {% if user.department %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>部署名</strong>
-                        <span>{{ user.department }}</span>
-                    </li>
-                    {% endif %}
-
-                    {% if user.birthday %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>生年月日</strong>
-                        <span>{{ user.birthday }}</span>
+                        <strong>お部屋情報</strong>
+                        <span>{{ contractor_info.property_name }} {{ contractor_info.room_name }}</span>
                     </li>
                     {% endif %}
                 </ul>
@@ -60,18 +52,18 @@
                     <div class="d-grid gap-2 mb-3">
                         <a href="#" class="btn btn-outline-primary">プロフィール編集</a>
                         <a href="#" class="btn btn-outline-secondary">パスワード変更</a>
-                        <a href="{% url 'logout' %}" class="btn btn-danger btn-lg">
-                            <i class="bi bi-box-arrow-right"></i> 退去する
-                        </a>
-                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-4 pt-3 border-top">
                     <h5 class="card-title text-danger">⚠️ ログアウト</h5>
                     <p class="card-text small">セッションを終了して安全にログアウトします。</p>
                     <div class="d-grid">
-                        <a href="{% url 'logout' %}" class="btn btn-danger btn-lg">
-                            <i class="bi bi-box-arrow-right"></i> ログアウトする
+                        <!-- <a href="https://buy.stripe.com/test_6oU5kD1IaebJ7QO2T61ZS00?prefilled_email={{ user.username }}&client_reference_id=userId" class="btn btn-warning btn-lg">
+                            入居者サービスを申し込む
+                        </a> -->
+                        <a href="{% url 'create_checkout_session' %}" class="btn btn-warning btn-lg">
+                            入居者サービスを申し込む
                         </a>
                     </div>
                 </div>

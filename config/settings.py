@@ -16,6 +16,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv # 追加
+import stripe # Stripeを使用する場合
 
 # 環境変数を読み込む
 load_dotenv() # 追加
@@ -47,6 +48,23 @@ else:
 # 開発中は以下のように設定してデバッグ情報を確認しても良い
 # DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+# -----------------------------------------------------------
+# 💡 認証バックエンドの設定 💡
+# -----------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    # カスタム認証バックエンドを最初に指定
+    'accounts.backends.SalesforceBackend', 
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# -----------------------------------------------------------
+# 💡 Stripe APIキーの設定 (動的決済リンク用) 💡
+# -----------------------------------------------------------
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
+STRIPE_SUBSCRIPTION_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', 'price_default')
 
 # Application definition
 
@@ -186,3 +204,10 @@ if RENDER_EXTERNAL_HOSTNAME:
 else:
     # ローカル開発環境用
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+
+# Salesforce 接続情報 (環境変数として設定してください)
+SF_INSTANCE_URL = os.environ.get('SF_INSTANCE_URL') # 例: https://yourdomain.my.salesforce.com
+SF_CLIENT_ID = os.environ.get('SF_CLIENT_ID')
+SF_CLIENT_SECRET = os.environ.get('SF_CLIENT_SECRET')
+SF_USERNAME = os.environ.get('SF_USERNAME') # APIユーザーのユーザー名
+SF_PASSWORD = os.environ.get('SF_PASSWORD') # APIユーザーのパスワード + セキュリティトークン
