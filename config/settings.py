@@ -204,7 +204,7 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 else:
     # ローカル開発環境用
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'lifesafetyguarantee.fly.dev']
 
 # メディアファイルの設定（画像アップロードなどに必要）
 MEDIA_URL = '/media/'
