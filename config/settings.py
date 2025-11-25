@@ -225,6 +225,20 @@ if DEBUG and '*' not in ALLOWED_HOSTS:
     # 🚨 本番環境では絶対に '*' を使ってはいけません
     ALLOWED_HOSTS.append('0.0.0.0')
 
+# -----------------------------------------------------------
+# 💡 CSRF 設定 💡
+# -----------------------------------------------------------
+
+# CSRF_TRUSTED_ORIGINS: 信頼できるドメインを設定します。
+# HTTPSを使用しているため、スキーマを含めることを推奨します。
+CSRF_TRUSTED_ORIGINS = [
+    'https://lifesafetyguarantee.fly.dev',
+    # 必要であれば、ローカル環境も追加
+    'http://localhost:8000', 
+    'http://127.0.0.1:8000',
+]
+
+
 # メディアファイルの設定（画像アップロードなどに必要）
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
