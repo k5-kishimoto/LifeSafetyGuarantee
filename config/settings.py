@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     # --- ここから追加 ---
     'widget_tweaks',
     'accounts',
+    'django_summernote', # 追加
     # --- ここまで追加 ---
 ]
 
@@ -205,9 +206,26 @@ else:
     # ローカル開発環境用
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
+# メディアファイルの設定（画像アップロードなどに必要）
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Summernoteの設定 (iframeを使わない設定にするとBootstrapと競合しにくい)
+SUMMERNOTE_CONFIG = {
+    'iframe': True,
+    'summernote': {
+        'width': '100%',
+        'height': '400',
+    }
+}
+
 # Salesforce 接続情報 (環境変数として設定してください)
 SF_INSTANCE_URL = os.environ.get('SF_INSTANCE_URL') # 例: https://yourdomain.my.salesforce.com
 SF_CLIENT_ID = os.environ.get('SF_CLIENT_ID')
 SF_CLIENT_SECRET = os.environ.get('SF_CLIENT_SECRET')
 SF_USERNAME = os.environ.get('SF_USERNAME') # APIユーザーのユーザー名
 SF_PASSWORD = os.environ.get('SF_PASSWORD') # APIユーザーのパスワード + セキュリティトークン
+
+VAPID_PUBLIC_KEY = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFymZTk830JUFayUF_k0raG9o1XEM8'
+VAPID_PRIVATE_KEY = 'erdqpRXihfjvCkLhOM_HxmttIDaev2lvf2Ww01VFVhY'
+VAPID_ADMIN_EMAIL = 'mailto: <k-kishimoto@life-okinawa.jp>' # あなたのメールアドレス

@@ -37,6 +37,7 @@
                 </ul>
                 {% endif %}
             </div>
+
             <div class="card-footer text-muted small">
                 最終ログイン: {{ user.last_login|default:"N/A"|date:"Y年m月d日 H:i" }}
             </div>
@@ -56,8 +57,8 @@
                 </div>
 
                 <div class="mt-4 pt-3 border-top">
-                    <h5 class="card-title text-danger">⚠️ ログアウト</h5>
-                    <p class="card-text small">セッションを終了して安全にログアウトします。</p>
+                    <!-- <h5 class="card-title text-danger">⚠️ ログアウト</h5>
+                    <p class="card-text small">セッションを終了して安全にログアウトします。</p> -->
                     <div class="d-grid">
                         <!-- <a href="https://buy.stripe.com/test_6oU5kD1IaebJ7QO2T61ZS00?prefilled_email={{ user.username }}&client_reference_id=userId" class="btn btn-warning btn-lg">
                             入居者サービスを申し込む
@@ -68,6 +69,46 @@
                     </div>
                 </div>
             </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">📬 お知らせボックス</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if messages_list %}
+                                <div class="list-group">
+                                    {% for msg in messages_list %}
+                                        <div class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1 fw-bold">{{ msg.Subject__c }}</h6>
+                                                <small class="text-muted">{{ msg.CreatedDate|slice:":10" }}</small>
+                                            </div>
+                                            
+                                            <div class="mb-1 text-break rich-text-content">
+                                                {{ msg.Body__c|safe }}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center py-3">現在、新しいメッセージはありません。</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style>
+                .rich-text-content img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                .rich-text-content a {
+                    word-break: break-all; /* 長いURLを強制的に折り返す */
+                    color: #0d6efd; /* リンク色を見やすく */
+                    text-decoration: underline;
+                }
+            </style>
         </div>
     </div>
 </div>

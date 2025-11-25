@@ -1,7 +1,10 @@
 # accounts/views.py
 
+import json
+from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic.edit import CreateView
+import requests
 from .forms import CustomUserCreationForm
 from django.contrib.auth import login, get_user_model
 from django.shortcuts import render, redirect 
@@ -9,12 +12,141 @@ from django.contrib import messages
 from django.conf import settings 
 from django.contrib.auth.decorators import login_required 
 import stripe 
+from django.utils.html import strip_tags # 💡 HTMLタグ除去用関数をインポート
 
 # 💡 Salesforce連携関数をインポート 💡
-from .salesforce import register_salesforce_contractor
+from .salesforce import get_auth_token, register_salesforce_contractor
 from .salesforce import get_contractor_info_by_username #
 from .salesforce import update_contractor_payment_status
 
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+from .salesforce import add_salesforce_webpush_subscription
+from .forms import SendMessageForm
+from .salesforce import create_salesforce_message
+from .utils import send_push_notification_to_user
+from .salesforce import get_contractor_messages # インポート追加
+
+# 管理者(スーパーユーザー)のみアクセス可能にする
+from django.contrib.admin.views.decorators import staff_member_required
+from .forms import SendMessageForm, BulkSendMessageForm # BulkSendMessageFormを追加
+from .salesforce import get_all_contractors, create_message_by_sf_id
+
+@staff_member_required
+def send_bulk_message_view(request):
+    if request.method == 'POST':
+        form = BulkSendMessageForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            html_body = form.cleaned_data['body'] # HTML
+            
+            # 💡 Web Push用にHTMLタグを除去 💡
+            plain_body = strip_tags(html_body)
+            
+            # 1. 全ユーザーをSalesforceから取得
+            contractors = get_all_contractors()
+            
+            if not contractors:
+                messages.error(request, "送信対象のユーザーが見つかりません。")
+                return redirect('send_bulk_message')
+
+            success_count = 0
+            User = get_user_model()
+
+            # 2. ループ処理で送信
+            for contractor in contractors:
+                sf_id = contractor['Id']
+                username = contractor['Name']
+                
+                # 1. SalesforceにはHTML保存
+                if create_message_by_sf_id(sf_id, subject, html_body):
+                    success_count += 1
+                    
+                    try:
+                        target_user = User.objects.get(username=username)
+                        # 2. Web Pushにはプレーンテキスト送信
+                        send_push_notification_to_user(
+                            target_user, 
+                            title=f"【一斉連絡】{subject}", 
+                            body=plain_body[:50]
+                        )
+                    except User.DoesNotExist:
+                        pass # ローカルにいないユーザーはスキップ
+            
+            messages.success(request, f"{len(contractors)}名中、{success_count}名へのメッセージ保存に成功しました。")
+            return redirect('home') # または完了画面へ
+            
+    else:
+        form = BulkSendMessageForm()
+        
+    return render(request, 'accounts/send_bulk_message.html', {'form': form})
+
+# ----------------------------------------------------
+# 個別送信ビュー (send_message_view)
+# ----------------------------------------------------
+@staff_member_required
+def send_message_view(request):
+    if request.method == 'POST':
+        form = SendMessageForm(request.POST)
+        if form.is_valid():
+            target_username = form.cleaned_data['target_username']
+            subject = form.cleaned_data['subject']
+            html_body = form.cleaned_data['body'] # これはHTML
+            
+            # 💡 1. SalesforceにはHTMLのまま保存 💡
+            sf_success = create_salesforce_message(target_username, subject, html_body)
+            
+            if sf_success:
+                try:
+                    User = get_user_model()
+                    target_user = User.objects.get(username=target_username)
+                    
+                    # 💡 2. Web Push用にHTMLタグを除去 💡
+                    plain_body = strip_tags(html_body)
+                    
+                    # 改行コード等が詰まってしまう場合があるため、少し整形しても良い
+                    # plain_body = plain_body.replace('&nbsp;', ' ') 
+                    
+                    push_success, push_msg = send_push_notification_to_user(
+                        target_user, 
+                        title=f"新着メッセージ: {subject}", 
+                        body=plain_body[:50] + "..." # プレーンテキストの一部を表示
+                    )
+                    messages.success(request, f"送信＆通知成功: {push_msg}")
+                    
+                except User.DoesNotExist:
+                    messages.warning(request, "Web Push用のローカルユーザーが見つかりません。")
+            else:
+                messages.error(request, "Salesforceへの保存に失敗しました。")
+                
+            return redirect('send_message')
+    else:
+        form = SendMessageForm()
+        
+    return render(request, 'accounts/send_message.html', {'form': form})
+
+@require_POST
+@login_required
+def subscribe_push(request):
+    try:
+        subscription_data = json.loads(request.body)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        
+        # 💡 追加関数を呼び出し 💡
+        success = add_salesforce_webpush_subscription(
+            request.user.username, 
+            subscription_data,
+            user_agent
+        )
+        
+        if success:
+            return JsonResponse({'status': 'ok'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Salesforce update failed'}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 # -----------------------------------------------------------
 # サインアップビュー (CreateView)
 # -----------------------------------------------------------
@@ -124,12 +256,14 @@ def create_checkout_session(request):
 def home_view(request):
     context = {}
     
-    # 1. Salesforceから契約者情報を取得
+    # ... (既存の処理: 契約者情報取得など) ...
     contractor_info = get_contractor_info_by_username(request.user.username)
-    
     if contractor_info:
-        # 取得した情報をコンテキストに追加
         context['contractor_info'] = contractor_info
+
+    # 💡 3. メッセージ一覧を取得してコンテキストに追加 💡
+    messages_list = get_contractor_messages(request.user.username)
+    context['messages_list'] = messages_list
     
     # GETパラメータから決済結果を取得しメッセージを準備
     payment_status = request.GET.get('payment')

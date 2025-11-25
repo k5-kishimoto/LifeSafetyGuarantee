@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}メッセージ送信{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>管理者用メッセージ送信</h2>
+    <div class="card p-4 shadow-sm">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="mb-3">
+                    {{ field.label_tag }}
+                    {{ field|add_class:"form-control" }}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-primary">送信して通知を送る 🚀</button>
+        </form>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'home' %}">ホームに戻る</a>
+    </div>
+</div>
+{% endblock %}

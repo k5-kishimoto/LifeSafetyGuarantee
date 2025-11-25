@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}一括メッセージ送信{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">⚠️ 注意</h4>
+        <p>この機能は登録されている<strong>全てのユーザー</strong>にメッセージと通知を送信します。<br>
+        送信完了まで時間がかかる場合がありますので、ボタンを押した後は画面を閉じずにお待ちください。</p>
+    </div>
+
+    <div class="card p-4 shadow-sm border-warning">
+        <h3 class="mb-3">全ユーザーへの一括送信 📢</h3>
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="mb-3">
+                    {{ field.label_tag }}
+                    {{ field|add_class:"form-control" }}
+                </div>
+            {% endfor %}
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-warning btn-lg" onclick="return confirm('本当に全員に送信しますか？');">
+                    全員に送信する
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'home' %}">ホームに戻る</a>
+    </div>
+</div>
+{% endblock %}

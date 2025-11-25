@@ -57,3 +57,22 @@ class CustomUserCreationForm(UserCreationForm):
             'address'
         ) 
         labels = {'username': 'ユーザー名'}
+
+from django import forms
+from django_summernote.widgets import SummernoteWidget # インポート
+
+# 個別送信フォーム
+class SendMessageForm(forms.Form):
+    target_username = forms.CharField(label='送信先ユーザー名', max_length=150)
+    subject = forms.CharField(label='件名', max_length=100)
+    # 💡 ウィジェットを SummernoteWidget に変更 💡
+    body = forms.CharField(label='本文', widget=SummernoteWidget())
+
+# 一括送信フォーム
+class BulkSendMessageForm(forms.Form):
+    subject = forms.CharField(label='件名', max_length=100)
+    # 💡 ウィジェットを SummernoteWidget に変更 💡
+    body = forms.CharField(
+        label='本文', 
+        widget=SummernoteWidget()
+    )
