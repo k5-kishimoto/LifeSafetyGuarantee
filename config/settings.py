@@ -196,15 +196,34 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # config/settings.py
 
-# Renderはデプロイ時にRENDER_EXTERNAL_HOSTNAME環境変数を自動で設定します。
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+# -----------------------------------------------------------
+# 💡 ホスト設定の整理 💡
+# -----------------------------------------------------------
 
-if RENDER_EXTERNAL_HOSTNAME:
-    # Render環境で実行されている場合、ホスト名を追加
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# 1. 環境変数からカンマ区切りで取得
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+
+if ALLOWED_HOSTS_ENV:
+    # 環境変数があれば、それを使用
+    ALLOWED_HOSTS = ALLOWED_HOSTS_ENV.split(',')
 else:
-    # ローカル開発環境用
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'lifesafetyguarantee.fly.dev']
+    # 環境変数がない場合のデフォルト設定
+    ALLOWED_HOSTS = [
+        '127.0.0.1', 
+        'localhost', 
+        'lifesafetyguarantee.fly.dev' # 💡 Fly.ioのドメインを確実に追加
+    ]
+
+# 2. Render向け（Renderを使っていないなら削除して良い）
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# 3. デバッグ時の '*' を安全に設定
+if DEBUG and '*' not in ALLOWED_HOSTS:
+    # 開発環境でデバッグ情報を確認する際に便利なように追加 (オプション)
+    # 🚨 本番環境では絶対に '*' を使ってはいけません
+    ALLOWED_HOSTS.append('0.0.0.0')
 
 # メディアファイルの設定（画像アップロードなどに必要）
 MEDIA_URL = '/media/'
