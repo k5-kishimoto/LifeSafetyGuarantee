@@ -13,7 +13,7 @@ class SalesforceBackend(BaseBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         """LeavingGuaranteeContractor__c のレコードとパスワードを検証し、権限を同期する"""
         
-        token, instance_url = get_auth_token()
+        token, instance_url, error = get_auth_token()
         if not token:
             return None 
 
