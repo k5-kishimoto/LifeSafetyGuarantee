@@ -236,6 +236,7 @@ CSRF_TRUSTED_ORIGINS = [
     # 必要であれば、ローカル環境も追加
     'http://localhost:8000', 
     'http://127.0.0.1:8000',
+    'https://life-okinawa.my.salesforce.com',
 ]
 
 

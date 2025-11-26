@@ -14,7 +14,7 @@ def hash_password(password):
 def get_auth_token():
     """API接続用のアクセストークンを取得 (APIユーザー認証)"""
     url = f"{settings.SF_INSTANCE_URL}/services/oauth2/token"
-    
+    error = ""
     if not all([settings.SF_USERNAME, settings.SF_PASSWORD, settings.SF_CLIENT_ID, settings.SF_CLIENT_SECRET]):
         # 環境変数不足の場合はログ出力
         return None, None 
@@ -37,16 +37,17 @@ def get_auth_token():
         response = requests.post(url, data=payload)
         response.raise_for_status()
         data = response.json()
-        return data.get('access_token'), data.get('instance_url')
-    except requests.exceptions.RequestException:
-        return None, None
+        return data.get('access_token'), data.get('instance_url'), error
+    except requests.exceptions.RequestException as e:
+        error = f"Exception: {e}"
+        return None, None, error
 
 # Salesforceにカスタムオブジェクトのレコードを登録する関数
 def register_salesforce_contractor(contractor_data):
     """LeavingGuaranteeContractor__c レコードを作成"""
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token:
-        return False, "Salesforce認証に失敗しました。"
+        return False, f"Salesforce認証に失敗しました。{error}"
 
     api_version = 'v58.0'
     sobject_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c"
@@ -91,7 +92,7 @@ def register_salesforce_contractor(contractor_data):
 def get_contractor_info_by_username(username):
     """ユーザー名に基づいてLeavingGuaranteeContractor__cの情報を取得する"""
     
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token:
         return None 
 
@@ -137,7 +138,7 @@ def update_contractor_payment_status(username):
     ユーザー名に基づいてLeavingGuaranteeContractor__cの
     PaymentStart__c 項目を True に更新する
     """
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token:
         return False
 
@@ -188,7 +189,7 @@ def update_contractor_payment_status(username):
 # 💡 Web Push購読情報を「追加」する関数 💡
 def add_salesforce_webpush_subscription(username, subscription_json, user_agent=''):
     """Web Push購読情報を追加 (重複チェック付き)"""
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return False
     api_version = 'v58.0'
     
@@ -263,7 +264,7 @@ def get_all_webpush_subscriptions(username):
     ユーザーに紐づく全ての GuaranteeWebNotification__c を取得する
     戻り値: [{'sf_id': '...', 'info': {...}}, ...] のリスト
     """
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token:
         return []
 
@@ -298,7 +299,7 @@ def get_all_webpush_subscriptions(username):
 
 # 💡 無効な購読情報を削除する関数 (通知送信エラー時に使用) 💡
 def delete_webpush_subscription(sf_id):
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return
     
     api_version = 'v58.0'
@@ -317,7 +318,7 @@ def create_salesforce_message(username, subject, body):
     """
     Contractorに対してメッセージレコードを作成する
     """
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return False
 
     api_version = 'v58.0'
@@ -357,7 +358,7 @@ def get_contractor_messages(username):
     """
     ユーザー宛のメッセージを新しい順に取得する
     """
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return []
 
     api_version = 'v58.0'
@@ -387,7 +388,7 @@ def get_all_contractors():
     """
     LeavingGuaranteeContractor__c から全レコードのIDとユーザー名を取得する
     """
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return []
 
     api_version = 'v58.0'
@@ -413,7 +414,7 @@ def get_all_contractors():
 # 既存の create_salesforce_message はユーザー名からIDを検索してしまうため、
 # すでにIDがわかっている一括送信では、直接IDを指定する関数があるとAPI消費を減らせます。
 def create_message_by_sf_id(contractor_id, subject, body):
-    token, instance_url = get_auth_token()
+    token, instance_url, error = get_auth_token()
     if not token: return False
     api_version = 'v58.0'
 
