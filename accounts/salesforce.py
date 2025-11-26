@@ -15,9 +15,9 @@ def get_auth_token():
     """API接続用のアクセストークンを取得 (APIユーザー認証)"""
     url = f"{settings.SF_INSTANCE_URL}/services/oauth2/token"
     error = ""
-    if not all([settings.SF_USERNAME, settings.SF_PASSWORD, settings.SF_CLIENT_ID, settings.SF_CLIENT_SECRET]):
+    if not all([settings.SF_CLIENT_ID, settings.SF_CLIENT_SECRET]):
         # 環境変数不足の場合はログ出力
-        return None, None 
+        return None, None ,error
 
     # payload = {
     #     'grant_type': 'password',
