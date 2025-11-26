@@ -19,13 +19,6 @@ def get_auth_token():
         # 環境変数不足の場合はログ出力
         return None, None ,error
 
-    # payload = {
-    #     'grant_type': 'password',
-    #     'client_id': settings.SF_CLIENT_ID,
-    #     'client_secret': settings.SF_CLIENT_SECRET,
-    #     'username': settings.SF_USERNAME,
-    #     'password': settings.SF_PASSWORD
-    # }
     payload = {
         'grant_type': 'client_credentials', # 💡 ここを変更 💡
         'client_id': settings.SF_CLIENT_ID,
