@@ -16,11 +16,14 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
 from django.conf.urls.static import static
 from django.views.generic import TemplateView # 💡 追加
+from django.views.generic.base import RedirectView # 💡 RedirectViewをインポート
 
 urlpatterns = [
+    # 💡 修正箇所: ルートURL ('') を 'home' へリダイレクト 💡
+    path('', RedirectView.as_view(url=reverse_lazy('home'), permanent=False), name='index'),
     path('admin/', admin.site.urls),
     # 認証関連のURLを '/accounts/' 以下に含める
     path('accounts/', include('django.contrib.auth.urls')),
