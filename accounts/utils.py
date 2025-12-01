@@ -29,7 +29,7 @@ def send_push_notification_to_user(user, title, body):
                 subscription_info=sub_info,
                 data=data,
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                vapid_public_key=settings.VAPID_PUBLIC_KEY,
+                #vapid_public_key=settings.VAPID_PUBLIC_KEY,
                 vapid_claims=vapid_claims
             )
             success_count += 1

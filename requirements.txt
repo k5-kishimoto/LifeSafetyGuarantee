@@ -10,6 +10,7 @@ charset-normalizer==3.4.4
 cryptography==46.0.3
 dj-database-url==3.0.1
 Django==5.2.8
+django-extensions==4.1
 django-summernote==0.8.20.0
 django-widget-tweaks==1.5.0
 frozenlist==1.8.0
@@ -40,5 +41,6 @@ stripe==14.0.0
 typing_extensions==4.15.0
 urllib3==2.5.0
 webencodings==0.5.1
+whitenoise==6.11.0
 yarl==1.22.0
 zeep==4.3.2

@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     # --- ここから追加 ---
     'widget_tweaks',
     'accounts',
+    'django_extensions', # ここに追加
     'django_summernote', # 追加
     # --- ここまで追加 ---
 ]
@@ -90,6 +91,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # 💡 ここに追加
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -177,6 +179,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# ローカルで静的ファイルを配信するための設定（通常はプロジェクトルートのstaticを指す）
+STATICFILES_DIRS = [
+    BASE_DIR / 'static', # 💡 staticフォルダがプロジェクトルートにあるならこれを追加
+]
+
+# config/settings.py
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+# ↑ この設定が必須です。
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -252,6 +263,10 @@ SUMMERNOTE_CONFIG = {
         'height': '400',
     }
 }
+
+# iframeを使用している場合、iframe内の表示を許可する
+X_FRAME_OPTIONS = 'SAMEORIGIN' 
+# ↑ この設定を「SAMEORIGIN」に変更してください。
 
 # Salesforce 接続情報 (環境変数として設定してください)
 SF_INSTANCE_URL = os.environ.get('SF_INSTANCE_URL') # 例: https://yourdomain.my.salesforce.com

@@ -113,7 +113,23 @@
     </div>
 </div>
     <script>
-        // static/js/push_subscribe.js (base.htmlの<script>タグで読み込む)
+        // 💡 修正箇所: getCookie関数を完全に実装 💡
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         const applicationServerKey = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFymZTk830JUFayUF_k0raG9o1XEM8'; // VAPID公開鍵
 
         function urlBase64ToUint8Array(base64String) {
@@ -144,7 +160,6 @@
             })
             .then(function(subscription) {
                 console.log('User is subscribed:', subscription);
-                // 購読情報をDjangoサーバーに送信
                 sendSubscriptionToDjango(subscription);
             })
             .catch(function(error) {
@@ -153,12 +168,11 @@
         }
 
         function sendSubscriptionToDjango(subscription) {
-            // 💡 /accounts/subscribe/ エンドポイントに購読情報をPOSTする (次のステップで作成)
             fetch('/accounts/subscribe/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken') // CSRFトークンを取得する関数が必要
+                    'X-CSRFToken': getCookie('csrftoken') // 💡 これで正しくCSRFトークンが送られる
                 },
                 body: JSON.stringify(subscription)
             });
@@ -166,32 +180,22 @@
 
         // ページ読み込み時にService Workerを登録し、購読を開始
         window.addEventListener('load', function() {
+            // CSRFトークンが存在しない場合（ログインページなど）は購読をスキップ
+            if (!getCookie('csrftoken') && !document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
+                 return; // 非ログインユーザーまたは非PWA環境では静かに終了
+            }
+            
             if ('serviceWorker' in navigator) {
-                //navigator.serviceWorker.register('/static/js/service_worker.js')
                 navigator.serviceWorker.register('/service_worker.js')
                 .then(function(reg) {
                     console.log('Service Worker registered!');
                     subscribeUser(); // 購読関数を呼び出す
+                })
+                .catch(function(error) {
+                    console.error('Service Worker registration failed:', error);
                 });
             }
         });
-
-        // (CSRFトークンを取得するためのシンプルなヘルパー関数)
-        function getCookie(name) {
-            // ... (Djangoの公式ドキュメントにあるgetCookie関数を使用) ...
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
     </script>
 
 {% endblock %}

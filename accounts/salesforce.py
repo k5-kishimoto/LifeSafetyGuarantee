@@ -5,6 +5,7 @@ import json
 from django.conf import settings
 from datetime import datetime
 from hashlib import sha256
+import html # 💡 これを追加
 
 # 簡易的なSHA256ハッシュ関数
 def hash_password(password):
@@ -280,10 +281,21 @@ def get_all_webpush_subscriptions(username):
         for record in data.get('records', []):
             json_str = record.get('SubscriptionJson__c')
             if json_str:
-                subscriptions.append({
-                    'sf_id': record['Id'], # 削除時に使用するID
-                    'info': json.loads(json_str)
-                })
+                try:
+                    # 💡 修正箇所: json.loads() の前に HTML デコードを追加 💡
+                    decoded_json_str = html.unescape(json_str) 
+
+                    subscriptions.append({
+                        'sf_id': record['Id'], 
+                        'info': json.loads(decoded_json_str) # デコード後の文字列を使用
+                    })
+                except json.JSONDecodeError as e:
+                    # (デバッグ出力はそのまま)
+                    print("--------------------------------------------------")
+                    print(f"JSON Decode Error: {e}")
+                    print(f"FAULTY JSON STRING (Subscription): {json_str[:200]}...")
+                    print("--------------------------------------------------")
+                    pass  
         return subscriptions
 
     except Exception as e:
