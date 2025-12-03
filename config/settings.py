@@ -297,9 +297,9 @@ VAPID_PUBLIC_KEY = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFy
 VAPID_PRIVATE_KEY = 'erdqpRXihfjvCkLhOM_HxmttIDaev2lvf2Ww01VFVhY'
 VAPID_ADMIN_EMAIL = 'mailto:k-kishimoto@life-okinawa.jp' # あなたのメールアドレス
 
-DEFAULT_AUTO_EMAIL = 'k-kishimoto@life-okinawa.com'
+DEFAULT_AUTO_EMAIL = '自分のメールアドレス@gmail.com'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'k-kishimoto@life-okinawa.com'
-EMAIL_HOST_PASSWORD = 'KishiKen1206'
+EMAIL_HOST_USER = '自分のメールアドレス@gmail.com'
+EMAIL_HOST_PASSWORD = '自分のパスワード'
