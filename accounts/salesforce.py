@@ -436,3 +436,70 @@ def create_message_by_sf_id(contractor_id, subject, body):
         return res.status_code == 201
     except:
         return False
+    
+# 💡 パスワード更新関数 (修正版) 💡
+def update_salesforce_password(username, new_hashed_password, return_error=False):
+    """
+    SalesforceのLeavingGuaranteeContractor__cのPassword__cを更新する
+    """
+    # get_auth_tokenの戻り値に合わせて展開
+    auth_result = get_auth_token()
+    if len(auth_result) == 3:
+        token, instance_url, auth_error = auth_result
+    else:
+        token, instance_url = auth_result
+        auth_error = "Unknown Auth Error"
+
+    if not token: 
+        return (False, auth_error) if return_error else False
+
+    api_version = 'v58.0'
+    
+    # 💡 修正箇所: 必ずコロン (:) を使って辞書として定義する 💡
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        # 1. ID取得
+        soql_query = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
+        query_url = f"{instance_url}/services/data/{api_version}/query"
+        
+        response = requests.get(query_url, headers=headers, params={'q': soql_query})
+        
+        # エラーチェック
+        if response.status_code != 200:
+             msg = f"Search Query Failed: {response.text}"
+             print(msg)
+             return (False, msg) if return_error else False
+
+        data = response.json()
+
+        if data['totalSize'] == 1:
+            record_id = data['records'][0]['Id']
+            
+            # 2. パスワード更新実行 (PATCH)
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
+            
+            payload = {
+                "Password__c": new_hashed_password 
+            }
+            
+            update_res = requests.patch(update_url, headers=headers, data=json.dumps(payload))
+            
+            if update_res.status_code == 204: # 204 No Content が成功
+                return (True, "") if return_error else True
+            else:
+                error_detail = update_res.text
+                print(f"Salesforce Password PATCH Failed: {error_detail}")
+                return (False, error_detail) if return_error else False
+        
+        else:
+            msg = f"User '{username}' not found in Salesforce."
+            print(msg)
+            return (False, msg) if return_error else False
+
+    except Exception as e:
+        print(f"Salesforce Password Update Error: {e}")
+        return (False, str(e)) if return_error else False

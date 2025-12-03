@@ -78,12 +78,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # --- ここから追加 ---
+    'django.contrib.sites', # 💡 追加 💡
     'widget_tweaks',
     'accounts',
     'django_extensions', # ここに追加
     'django_summernote', # 追加
     # --- ここまで追加 ---
 ]
+# 💡 SITE_ID を追加 💡
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -264,6 +267,21 @@ SUMMERNOTE_CONFIG = {
     }
 }
 
+
+# config/settings.py (メール関連の設定)
+
+# 💡 サイトのドメイン名とプロトコルの設定 💡
+# 公開ドメイン、またはローカルホスト（http）を使用
+DOMAIN = '127.0.0.1:8000' # ローカルテスト用。公開デプロイ時は 'lifesafetyguarantee.fly.dev' にする
+SITE_NAME = '会員サイト'
+
+# 外部プロキシ（Fly.ioなど）を使用している場合は必須
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# 💡 開発環境用: メールをターミナルに出力する設定 💡
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # iframeを使用している場合、iframe内の表示を許可する
 X_FRAME_OPTIONS = 'SAMEORIGIN' 
 # ↑ この設定を「SAMEORIGIN」に変更してください。
@@ -277,4 +295,11 @@ SF_PASSWORD = os.environ.get('SF_PASSWORD') # APIユーザーのパスワード 
 
 VAPID_PUBLIC_KEY = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFymZTk830JUFayUF_k0raG9o1XEM8'
 VAPID_PRIVATE_KEY = 'erdqpRXihfjvCkLhOM_HxmttIDaev2lvf2Ww01VFVhY'
-VAPID_ADMIN_EMAIL = 'mailto: <k-kishimoto@life-okinawa.jp>' # あなたのメールアドレス
+VAPID_ADMIN_EMAIL = 'mailto:k-kishimoto@life-okinawa.jp' # あなたのメールアドレス
+
+DEFAULT_AUTO_EMAIL = 'k-kishimoto@life-okinawa.com'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'k-kishimoto@life-okinawa.com'
+EMAIL_HOST_PASSWORD = 'KishiKen1206'

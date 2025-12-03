@@ -1,7 +1,7 @@
 # accounts/forms.py
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm,PasswordResetForm,SetPasswordForm
 from django.forms import PasswordInput
 from django.contrib.auth import get_user_model
 User = get_user_model() 
@@ -76,3 +76,35 @@ class BulkSendMessageForm(forms.Form):
         label='本文', 
         widget=SummernoteWidget()
     )
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm # 💡 両方インポート 💡
+
+# ログイン中のユーザーのパスワード変更に使用するフォーム。
+# SetPasswordFormは新しいパスワードとその確認のみを要求し、
+# 古いパスワード（old_password）フィールドを持ちません。
+class NoOldPasswordValidationForm(SetPasswordForm):
+    """
+    ログイン中のユーザーのパスワードを変更する際に、
+    古いパスワードの検証をスキップするために使用するフォーム。
+    (SetPasswordFormをそのまま利用し、必要に応じてカスタマイズ可能)
+    """
+    # 現状、SetPasswordFormにカスタムなフィールドやバリデーションを追加する必要がないため、
+    # シンプルに pass します。
+    pass
+
+# 💡 修正箇所: パスワードリセット用のカスタムフォームを追加 💡
+class CustomPasswordResetForm(PasswordResetForm):
+    def get_users(self, email):
+        """
+        パスワードが使用不可(unusable)なユーザーもリセット対象に含めるようにオーバーライド
+        """
+        UserModel = get_user_model()
+        email_field_name = UserModel.get_email_field_name()
+        
+        # 入力されたメールアドレス(またはユーザー名)に一致するアクティブなユーザーを検索
+        active_users = UserModel._default_manager.filter(**{
+            '%s__iexact' % email_field_name: email,
+            'is_active': True,
+        })
+        
+        # 親クラスのチェック(has_usable_password)をスキップして、ユーザーリストをそのまま返す
+        return active_users

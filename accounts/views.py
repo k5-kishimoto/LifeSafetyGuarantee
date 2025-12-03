@@ -4,34 +4,31 @@ import json
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic.edit import CreateView
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth import login, get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.views import FormView,PasswordResetConfirmView,PasswordResetView # FormViewをベースにカスタマイズ
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+
 import requests
 from .forms import CustomUserCreationForm
-from django.contrib.auth import login, get_user_model
 from django.shortcuts import render, redirect 
-from django.contrib import messages 
-from django.conf import settings 
-from django.contrib.auth.decorators import login_required 
+from django.conf import settings  
 import stripe 
 from django.utils.html import strip_tags # 💡 HTMLタグ除去用関数をインポート
-
-# 💡 Salesforce連携関数をインポート 💡
-from .salesforce import get_auth_token, register_salesforce_contractor
-from .salesforce import get_contractor_info_by_username #
-from .salesforce import update_contractor_payment_status
-
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-
-from .salesforce import add_salesforce_webpush_subscription
 from .forms import SendMessageForm
-from .salesforce import create_salesforce_message
 from .utils import send_push_notification_to_user
-from .salesforce import get_contractor_messages # インポート追加
+# 💡 Salesforce連携関数をインポート 💡
+from .salesforce import create_salesforce_message, get_all_contractors, create_message_by_sf_id, update_contractor_payment_status, get_contractor_info_by_username, get_auth_token, register_salesforce_contractor, add_salesforce_webpush_subscription, get_contractor_messages, update_salesforce_password, hash_password # インポート追加
 
 # 管理者(スーパーユーザー)のみアクセス可能にする
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import SendMessageForm, BulkSendMessageForm # BulkSendMessageFormを追加
-from .salesforce import get_all_contractors, create_message_by_sf_id
+
+from django.contrib.sites.models import Site
 
 @staff_member_required
 def send_bulk_message_view(request):
@@ -282,3 +279,109 @@ def home_view(request):
 
     # Django Messagesがコンテキストにメッセージを自動で含めるため、ここではメッセージ表示ロジックは不要
     return render(request, 'accounts/home.html', context)
+
+class NoOldPasswordChangeView(LoginRequiredMixin, FormView):
+    # 古いパスワードを要求しない SetPasswordForm を使用
+    form_class = SetPasswordForm 
+    template_name = 'registration/password_change_form.html'
+    # 成功時のリダイレクト先
+    success_url = reverse_lazy('password_change_done') 
+
+    def get_form_kwargs(self):
+        """フォームに現在のユーザーオブジェクトを渡し、バリデーションを可能にする"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user # 👈 ログイン中のユーザーを渡す
+        return kwargs
+
+    def form_valid(self, form):
+        username = self.request.user.username
+        new_password = form.cleaned_data['new_password1']
+        # new_hashed_password = hash_password(new_password)
+        new_hashed_password = new_password
+        
+        # 2. Salesforceのパスワードを更新
+        # 💡 修正箇所: エラーメッセージを受け取るように変更 💡
+        sf_success, sf_error_msg = update_salesforce_password(username, new_hashed_password, return_error=True)
+        
+        if not sf_success:
+            # 🚨 失敗した場合の処理 🚨
+            messages.error(self.request, f"Salesforceのパスワード更新に失敗しました。詳細: {sf_error_msg}")
+            
+            # 💡 フォームにエラーを追加する（画面表示用）
+            form.add_error(None, "パスワードの更新処理でエラーが発生しました。Salesforce側の問題を確認してください。") 
+            
+            # 💡 form_invalidを呼び出してフォーム画面に戻る 💡
+            return self.form_invalid(form) 
+            # ログはターミナルに出ているはずですが、これでも画面が切り替わらない場合は問題が別の場所にあります 
+            
+        # 3. Djangoのローカルユーザーのパスワードを更新 (成功した場合のみ)
+        form.save() 
+        
+        messages.success(self.request, "パスワードが正常に変更されました。")
+        return super().form_valid(form)
+
+# 💡 パスワードリセット確認ビューをカスタマイズ 💡
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+    
+    def form_valid(self, form):
+        # 1. Djangoの標準処理を実行（ローカルユーザーのパスワード変更）
+        # このステップで form.save() が呼ばれ、新しいパスワードが設定されます。
+        response = super().form_valid(form)
+
+        # 2. Salesforceの更新処理
+        
+        # フォームのユーザーはリセット対象のユーザー
+        target_user = form.user 
+        username = target_user.username
+        
+        # 新しいパスワードの平文（SetPasswordFormの仕様により取得可能）
+        new_password = form.cleaned_data['new_password1'] 
+        # new_hashed_password = hash_password(new_password)
+        new_hashed_password = new_password
+        
+        # Salesforceのパスワードを更新
+        sf_success, sf_error_msg = update_salesforce_password(username, new_hashed_password, return_error=True)
+        
+        if not sf_success:
+            # 🚨 Salesforce更新失敗時の処理 🚨
+            # ここでエラーが発生した場合、すでにローカルユーザーのパスワードは変更されているため、
+            # ログを出力し、管理者に対応を促すメッセージを表示するのみにとどめます。
+            print(f"CRITICAL ERROR: Salesforce password update failed for user {username}. Detail: {sf_error_msg}")
+            messages.warning(self.request, "パスワードの変更は完了しましたが、Salesforce側での同期に失敗しました。管理者に連絡してください。")
+
+        return response
+    
+class DebugPasswordResetView(PasswordResetView):
+    # 💡 修正箇所 1: domain_override をクラス属性として設定 💡
+    domain_override = '127.0.0.1:8000'
+    
+    # 💡 修正箇所 2: テンプレート名もクラス属性として設定 (urls.pyから移動) 💡
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    # 💡 どのユーザーがリクエストしているかを確認するためのメソッド 💡
+    def get_users(self, email):
+        # フォームに入力された値 (ここでは email としていますが、実際はユーザー名)
+        # に基づいてユーザーを検索します。
+        
+        # 標準のロジックを呼び出し、ユーザーが見つかったか確認
+        users = super().get_users(email)
+        
+        found_users = list(users)
+        if found_users:
+            print("--- DEBUG: PasswordResetView ---")
+            print(f"ユーザーが見つかりました: {found_users[0].username}")
+            print(f"送信先メールアドレス: {found_users[0].email}")
+            print("---------------------------------")
+        else:
+            print("--- DEBUG: PasswordResetView ---")
+            print(f"ユーザーが見つかりませんでした: {email}")
+            print("---------------------------------")
+            
+        return found_users
+
+# 💡 form_valid もオーバーライドして、処理が最後まで進んでいるか確認
+    def form_valid(self, form):
+        print(f"--- DEBUG: form_valid が呼ばれました。メール送信ロジックに進みます。---{Site.objects.get(pk=settings.SITE_ID)}")
+        return super().form_valid(form)
