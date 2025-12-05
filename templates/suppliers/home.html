@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}業者ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="display-6 text-success mb-3">業者ホーム画面へようこそ！ 👷</h2>
+        <p class="lead text-muted">現在ログイン中のユーザー: **{{ user.username }}**</p>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">紐づく会員情報 (契約者) 一覧</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if contractors %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>物件名</th>
+                                <th>部屋名</th>
+                                <th>電話番号</th>
+                                <th>Email</th>
+                                <th>支払</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contractor in contractors %}
+                            <tr>
+                                <td>{{ contractor.full_name }}</td>
+                                <td>{{ contractor.property_name }}</td>
+                                <td>{{ contractor.room_name }}</td>
+                                <td>{{ contractor.telephone }}</td>
+                                <td>{{ contractor.id }}</td>
+                                <td class="text-center">
+                                    {% if contractor.paying %}
+                                    <span class="text-success fw-bold" title="支払い済み">✅</span>
+                                    {% else %}
+                                    <span class="text-danger fw-bold" title="未払い">❌</span>
+                                    {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-3 text-center text-muted">
+                    現在、この業者に紐づく会員情報は見つかりませんでした。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm bg-success-subtle h-100">
+            <div class="card-body">
+                <h5 class="card-title">ユーザー情報</h5>
+                </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">契約者管理タスク</h5>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

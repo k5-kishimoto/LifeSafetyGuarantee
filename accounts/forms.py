@@ -4,15 +4,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm,PasswordResetForm,SetPasswordForm
 from django.forms import PasswordInput
 from django.contrib.auth import get_user_model
+from .salesforce import get_all_agencies_for_choices 
+
 User = get_user_model() 
 
-# 💡 業者名の選択肢 💡
-CONTRACTOR_CHOICES = [
-    ('', '--- 業者名を選択してください ---'), 
-    ('A社', 'A社 (ID: 100)'),
-    ('B社', 'B社 (ID: 200)'),
-    ('C社', 'C社 (ID: 300)'),
-]
+# 🚨 CONTRACTOR_CHOICES の定義は不要なので削除 🚨
+
+
 
 class CustomUserCreationForm(UserCreationForm):
     # ユーザー名とパスワード
@@ -23,12 +21,22 @@ class CustomUserCreationForm(UserCreationForm):
     password2 = forms.CharField(label='パスワード（確認用）', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
     
     # 💡 選択リスト 💡
+    # 💡 選択リストのフィールドはそのまま定義 💡
     contractor_name = forms.ChoiceField(
         label='業者名',
-        choices=CONTRACTOR_CHOICES,
+        # choices は __init__ で設定するため、ここでは空欄でOK
         required=True,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # 1. Salesforceから選択肢を取得
+        agency_choices = get_all_agencies_for_choices()
+        
+        # 2. フィールドに選択肢を設定
+        self.fields['contractor_name'].choices = agency_choices
 
     # 💡 日付型 💡
     birthday = forms.DateField(

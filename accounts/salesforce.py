@@ -56,7 +56,7 @@ def register_salesforce_contractor(contractor_data):
         # "Password__c": hash_password(contractor_data['password']), # ハッシュ化されたパスワード
         "LastName__c": contractor_data['last_name'],
         "FirstName__c": contractor_data['first_name'],
-        "BusinessName__c": contractor_data['contractor_name'], 
+        "Supplier__c": contractor_data['contractor_name'], # フォームからはIDが渡される
         "Birthday__c": birthday_str, 
         "PropertyName__c": contractor_data['property_name'],
         "RoomName__c": contractor_data['room_name'],
@@ -127,7 +127,7 @@ def get_contractor_info_by_username(username):
     return None
 
 # 💡 決済ステータスを更新する関数を追加 💡
-def update_contractor_payment_status(username):
+def update_contractor_payment_status(username,status,isend):
     """
     ユーザー名に基づいてLeavingGuaranteeContractor__cの
     PaymentStart__c 項目を True に更新する
@@ -159,10 +159,23 @@ def update_contractor_payment_status(username):
             # 2. 特定したレコードIDに対して更新 (PATCH) を実行
             update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
             
-            payload = {
-                "PaymentStart__c": True,  # Boolean項目を更新
-                "MoveInDate__c" : now_str
-            }
+            if status:
+                payload = {
+                    "PaymentStart__c": True,
+                    "Paying__c": status,  # Boolean項目を更新
+                    "MoveInDate__c" : now_str
+                }
+
+            else:
+                if isend:
+                    payload = {
+                        "Paying__c": status,
+                        "IsDelete__c": isend
+                    }
+                else:
+                    payload = {
+                        "Paying__c": status
+                    }
             
             update_response = requests.patch(update_url, headers=headers, data=json.dumps(payload))
             
@@ -503,3 +516,37 @@ def update_salesforce_password(username, new_hashed_password, return_error=False
     except Exception as e:
         print(f"Salesforce Password Update Error: {e}")
         return (False, str(e)) if return_error else False
+    
+def get_all_agencies_for_choices():
+    """EvictionGuaranteeAgency__c の全レコードを取得し、フォームの選択肢として返す"""
+    
+    token, instance_url, auth_error = get_auth_token()
+    if not token: 
+        print(f"Agency Choice Fetch Error: {auth_error}")
+        return []
+
+    api_version = 'v58.0'
+    
+    # 💡 SOQL: Name (表示名) と Id を取得 💡
+    soql_query = "SELECT Id, Name FROM EvictionGuaranteeAgency__c ORDER BY Name"
+    query_url = f"{instance_url}/services/data/{api_version}/query"
+    headers = {'Authorization': f'Bearer {token}'}
+
+    try:
+        response = requests.get(query_url, headers=headers, params={'q': soql_query})
+        response.raise_for_status()
+        data = response.json()
+        
+        choices = [('', '--- 業者名を選択してください ---')]
+        
+        for record in data.get('records', []):
+            # フォームの選択肢形式 (値, 表示ラベル)
+            # 値には Salesforce ID (Id) を使い、表示ラベルに Name を使います
+            choices.append((record['Id'], record['Name']))
+            
+        return choices
+
+    except Exception as e:
+        print(f"Salesforce Agency Fetch Error: {e}")
+        # API接続失敗時も空の選択肢を返せるよう、初期値の選択肢を返します
+        return [('', '--- 業者名を取得できませんでした ---')]

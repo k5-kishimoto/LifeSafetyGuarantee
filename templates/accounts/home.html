@@ -66,6 +66,18 @@
                             入居者サービスを申し込む
                         </a>
                     </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <h5 class="card-title text-danger">⚠️ 退去する</h5>
+                        <p class="card-text small">サブスクリプションを即座にキャンセルします。</p>
+                        <div class="d-grid">
+                            <form action="{% url 'cancel_service' %}" method="post" onsubmit="return confirm('本当に退去しますか？この操作は元に戻せません。');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-block">
+                                    退去する
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row mt-4">

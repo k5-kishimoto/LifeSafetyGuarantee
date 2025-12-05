@@ -47,12 +47,15 @@ urlpatterns = [
 
     # 💡 修正箇所: ルートURL ('') を 'home' へリダイレクト 💡
     path('', RedirectView.as_view(url=reverse_lazy('home'), permanent=False), name='index'),
+    
     path('admin/', admin.site.urls),
     # 認証関連のURLを '/accounts/' 以下に含める
     path('accounts/', include('django.contrib.auth.urls')),
     # 今後作成するカスタムビューやアプリのURLもここに追加
     # accountsアプリのカスタムURL (サインアップなど)
     path('accounts/', include('accounts.urls')),
+# 💡 業者管理のURLを追加 💡
+    path('suppliers/', include('suppliers.urls', namespace='suppliers')),
 
     path('summernote/', include('django_summernote.urls')),# 💡 Service Worker をルートURLで配信するための設定 💡
     path('service_worker.js', TemplateView.as_view(

@@ -27,7 +27,7 @@ from .salesforce import create_salesforce_message, get_all_contractors, create_m
 # 管理者(スーパーユーザー)のみアクセス可能にする
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import SendMessageForm, BulkSendMessageForm # BulkSendMessageFormを追加
-
+from .stripe_utils import create_subscription_checkout_session, cancel_stripe_subscription, create_customer_portal_session # 新しい関数をインポート
 from django.contrib.sites.models import Site
 
 @staff_member_required
@@ -199,52 +199,68 @@ class SignUpView(CreateView):
         return context
 
 # -----------------------------------------------------------
-# Stripe Checkout Session 生成ビュー
+# Stripe 関連
 # -----------------------------------------------------------
-
 @login_required
-def create_checkout_session(request):
+def create_checkout_session_view(request):
     if not settings.STRIPE_SECRET_KEY:
         messages.error(request, "Stripeキーが設定されていません。")
         return redirect('home')
 
-    # Fly.ioデプロイ時の絶対URL生成をサポート
+    # Fly.ioデプロイ時の絶対URL生成をサポート (ロジックはビューに残す)
     HOST_URL = 'https://' + settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '127.0.0.1' else 'http://127.0.0.1:8000'
+    
+    # 💡 ユーティリティ関数を呼び出す 💡
+    success, result = create_subscription_checkout_session(request.user, HOST_URL)
+    
+    if success:
+        # 成功した場合、result には決済URLが入っている
+        return redirect(result, code=303)
+    else:
+        # 失敗した場合、result にはエラーメッセージが入っている
+        messages.error(request, result)
+        return redirect('home')
 
-    success_url = HOST_URL + reverse('home') + '?payment=success'
-    cancel_url = HOST_URL + reverse('home') + '?payment=cancelled'
-
-    STRIPE_PRICE_ID = settings.STRIPE_SUBSCRIPTION_PRICE_ID # settingsから読み込み # ← ここに取得したIDを入れる
-    # 💡 デバッグ用に出力 💡
-    print(f"Stripe Price ID to use: [{STRIPE_PRICE_ID}]") 
-    print(f"Type: {type(STRIPE_PRICE_ID)}") # 必ず <class 'str'> であること
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            line_items=[
-                {
-                    # 💡 Ad-hocな price_data ではなく、既存の price ID を指定 💡
-                    'price': STRIPE_PRICE_ID,
-                    'quantity': 1,
-                }
-            ],
-            # 💡 モードを 'subscription' に変更 💡
-            mode='subscription', 
-            
-            success_url=success_url,
-            cancel_url=cancel_url,
-            customer_email=request.user.email if request.user.email else None,
-            metadata={'user_id': request.user.id},
-            # 必要に応じて、サブスクリプション固有の設定を追加
-            # subscription_data={
-            #    'trial_period_days': 30, # トライアル期間など
-            # }
-        )
-        return redirect(checkout_session.url, code=303)
+@login_required
+@require_POST
+def cancel_subscription_view(request):
+    """
+    StripeサブスクリプションとSalesforceレコードを解約する
+    """
+    username = request.user.username
+    
+    success, message = cancel_stripe_subscription(username)
+    
+    if success:
+        messages.success(request, f"サービス解約処理が完了しました: {message}")
+    else:
+        messages.error(request, f"解約処理中にエラーが発生しました: {message}")
         
-    except Exception as e:
-        messages.error(request, f"決済セッションの作成に失敗しました: {e}")
+    return redirect('home') # ホーム画面に戻す
+
+@login_required
+def manage_payment_method_view(request):
+    """
+    Stripe Customer Portalへユーザーをリダイレクトするビュー
+    """
+    if not settings.STRIPE_SECRET_KEY:
+        messages.error(request, "Stripeキーが設定されていません。")
         return redirect('home')
     
+    # Fly.ioデプロイ時の絶対URL生成をサポート (HOST_URLは既存のものを再利用)
+    HOST_URL = 'https://' + settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '127.0.0.1' else 'http://127.0.0.1:8000'
+    
+    success, url_or_message = create_customer_portal_session(request.user, HOST_URL)
+    
+    if success:
+        # 成功: StripeのポータルURLへリダイレクト
+        return redirect(url_or_message)
+    else:
+        # 失敗: エラーメッセージを表示してホームに戻る
+        messages.error(request, url_or_message)
+        return redirect('home')
+# -----------------------------------------------------------
+
 # -----------------------------------------------------------
 # 会員ホームビュー (home_view)
 # -----------------------------------------------------------
@@ -267,7 +283,7 @@ def home_view(request):
     
     if payment_status == 'success':
         # 💡 Salesforceのステータスを更新する処理を追加 💡
-        sf_updated = update_contractor_payment_status(request.user.username)
+        sf_updated = update_contractor_payment_status(request.user.username,status=True, isend=False)
         
         if sf_updated:
             messages.success(request, '決済が完了し、入居サービスの利用が開始されました！')

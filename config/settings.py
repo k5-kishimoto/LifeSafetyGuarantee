@@ -54,6 +54,7 @@ else:
 AUTHENTICATION_BACKENDS = [
     # カスタム認証バックエンドを最初に指定
     'accounts.backends.SalesforceBackend', 
+    'suppliers.backends.AgencySalesforceBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -81,6 +82,7 @@ INSTALLED_APPS = [
     'django.contrib.sites', # 💡 追加 💡
     'widget_tweaks',
     'accounts',
+    'suppliers',
     'django_extensions', # ここに追加
     'django_summernote', # 追加
     # --- ここまで追加 ---
