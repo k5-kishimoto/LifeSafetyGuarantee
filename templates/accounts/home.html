@@ -159,28 +159,30 @@
         }
 
         function subscribeUser() {
-        if (!('serviceWorker' in navigator)) {
-            return;
+            if (!('serviceWorker' in navigator)) {
+                return;
+            }
+
+            navigator.serviceWorker.ready.then(function(reg) {
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
+                };
+
+                return reg.pushManager.subscribe(subscribeOptions);
+            })
+            .then(function(subscription) {
+                console.log('User is subscribed:', subscription);
+                sendSubscriptionToDjango(subscription);
+                alert("通知設定が完了しました！");
+            })
+            .catch(function(error) {
+                console.error('Failed to subscribe the user: ', error);
+                
+                // 💡 修正箇所: エラーの詳細をアラートに表示する 💡
+                alert("エラー詳細: " + error.name + "\n" + error.message);
+            });
         }
-
-        navigator.serviceWorker.ready.then(function(reg) {
-            const subscribeOptions = {
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
-            };
-
-            return reg.pushManager.subscribe(subscribeOptions);
-        })
-        .then(function(subscription) {
-            console.log('User is subscribed:', subscription);
-            sendSubscriptionToDjango(subscription);
-            alert("通知設定が完了しました！"); // ユーザーにフィードバック
-        })
-        .catch(function(error) {
-            console.error('Failed to subscribe the user: ', error);
-            alert("通知設定に失敗しました。ホーム画面に追加されているか確認してください。");
-        });
-    }
 
     // ... (sendSubscriptionToDjango 関数はそのまま) ...
 
