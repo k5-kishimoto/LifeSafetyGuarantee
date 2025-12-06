@@ -3,11 +3,13 @@
 {% block title %}会員ダッシュボード{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
+<div class="row mt-3">
+    <div class="col-12 text-center">
         <h2 class="display-6 text-primary mb-3">ようこそ、{{ user.username }}さん！ 👋</h2>
+        <button id="enable-notifications-btn" class="btn btn-outline-primary btn-sm">
+            🔔 通知を受け取る設定にする
+        </button>
         <p class="lead text-muted">iPhoneの方は、共有ボタン > ホーム画面に追加 をタップしてください</p>
-        <hr>
     </div>
 </div>
 
@@ -157,56 +159,56 @@
         }
 
         function subscribeUser() {
-            if (!('serviceWorker' in navigator)) {
-                return;
-            }
-
-            navigator.serviceWorker.ready.then(function(reg) {
-                const subscribeOptions = {
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
-                };
-
-                return reg.pushManager.subscribe(subscribeOptions);
-            })
-            .then(function(subscription) {
-                console.log('User is subscribed:', subscription);
-                sendSubscriptionToDjango(subscription);
-            })
-            .catch(function(error) {
-                console.error('Failed to subscribe the user: ', error);
-            });
+        if (!('serviceWorker' in navigator)) {
+            return;
         }
 
-        function sendSubscriptionToDjango(subscription) {
-            fetch('/accounts/subscribe/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken') // 💡 これで正しくCSRFトークンが送られる
-                },
-                body: JSON.stringify(subscription)
-            });
-        }
+        navigator.serviceWorker.ready.then(function(reg) {
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
+            };
 
-        // ページ読み込み時にService Workerを登録し、購読を開始
-        window.addEventListener('load', function() {
-            // CSRFトークンが存在しない場合（ログインページなど）は購読をスキップ
-            if (!getCookie('csrftoken') && !document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
-                 return; // 非ログインユーザーまたは非PWA環境では静かに終了
-            }
-            
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service_worker.js')
-                .then(function(reg) {
-                    console.log('Service Worker registered!');
-                    subscribeUser(); // 購読関数を呼び出す
-                })
-                .catch(function(error) {
-                    console.error('Service Worker registration failed:', error);
-                });
-            }
+            return reg.pushManager.subscribe(subscribeOptions);
+        })
+        .then(function(subscription) {
+            console.log('User is subscribed:', subscription);
+            sendSubscriptionToDjango(subscription);
+            alert("通知設定が完了しました！"); // ユーザーにフィードバック
+        })
+        .catch(function(error) {
+            console.error('Failed to subscribe the user: ', error);
+            alert("通知設定に失敗しました。ホーム画面に追加されているか確認してください。");
         });
+    }
+
+    // ... (sendSubscriptionToDjango 関数はそのまま) ...
+
+    // ページ読み込み時の処理を変更
+    window.addEventListener('load', function() {
+        if ('serviceWorker' in navigator) {
+            // Service Workerの登録だけは先に行う
+            navigator.serviceWorker.register('/service_worker.js')
+            .then(function(reg) {
+                console.log('Service Worker registered!');
+            });
+        }
+        
+        // 💡 ボタンクリックで購読処理を開始 💡
+        const btn = document.getElementById('enable-notifications-btn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                // 許可を求める（iOS対策）
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        subscribeUser();
+                    } else {
+                        alert("通知が許可されませんでした。ブラウザの設定を確認してください。");
+                    }
+                });
+            });
+        }
+    });
     </script>
 
 {% endblock %}

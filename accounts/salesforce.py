@@ -170,11 +170,12 @@ def update_contractor_payment_status(username,status,isend):
                 if isend:
                     payload = {
                         "Paying__c": status,
-                        "IsDelete__c": isend
+                        "IsMovedOut__c": isend
                     }
                 else:
                     payload = {
-                        "Paying__c": status
+                        "Paying__c": status,
+                        "MovedOutDate__c" : now_str
                     }
             
             update_response = requests.patch(update_url, headers=headers, data=json.dumps(payload))
