@@ -225,9 +225,9 @@ if ALLOWED_HOSTS_ENV:
 else:
     # 環境変数がない場合のデフォルト設定
     ALLOWED_HOSTS = [
+        'lifesafetyguarantee.fly.dev', # 💡 Fly.ioのドメインを確実に追加
         '127.0.0.1', 
         'localhost', 
-        'lifesafetyguarantee.fly.dev' # 💡 Fly.ioのドメインを確実に追加
     ]
 
 # 2. Render向け（Renderを使っていないなら削除して良い）

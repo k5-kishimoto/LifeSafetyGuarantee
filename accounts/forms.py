@@ -14,7 +14,7 @@ User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     # ユーザー名とパスワード
-    username = forms.CharField(label='ユーザー名', max_length=150, required=True)
+    username = forms.CharField(label='ユーザー名（メールアドレス）', max_length=150, required=True)
     last_name = forms.CharField(label='姓', max_length=50, required=True)
     first_name = forms.CharField(label='名', max_length=50, required=True)
     password1 = forms.CharField(label='パスワード', widget=PasswordInput, strip=False)
@@ -47,7 +47,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     # 💡 カスタム項目 💡
     property_name = forms.CharField(label='物件名', max_length=100, required=True)
-    room_name = forms.CharField(label='部屋名', max_length=50, required=True)
+    room_name = forms.CharField(label='部屋番号', max_length=50, required=True)
     telephone = forms.CharField(label='電話番号', max_length=15, help_text='ハイフンなしで入力してください', required=True)
     address = forms.CharField(label='住所', widget=forms.Textarea(attrs={'rows': 3}), required=True)
 
