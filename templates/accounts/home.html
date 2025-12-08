@@ -58,15 +58,12 @@
                 </div>
 
                 <div class="mt-4 pt-3 border-top">
-                    <!-- <h5 class="card-title text-danger">⚠️ ログアウト</h5>
-                    <p class="card-text small">セッションを終了して安全にログアウトします。</p> -->
                     <div class="d-grid">
-                        <!-- <a href="https://buy.stripe.com/test_6oU5kD1IaebJ7QO2T61ZS00?prefilled_email={{ user.username }}&client_reference_id=userId" class="btn btn-warning btn-lg">
-                            入居者サービスを申し込む
-                        </a> -->
                         <a href="{% url 'create_checkout_session' %}" class="btn btn-warning btn-lg">
                             入居者サービスを申し込む
                         </a>
+                        <a href="{% url 'manage_payment' %}" class="btn btn-primary">支払い方法の変更・管理</a>
+
                     </div>
                     <div class="mt-4 pt-3 border-top">
                         <h5 class="card-title text-danger">⚠️ 退去する</h5>
@@ -127,7 +124,7 @@
 </div>
 <script>
     // ---------------------------------------------------------
-    // 1. サーバーへ購読情報を送る関数 (これがエラーの原因でした)
+    // 1. サーバーへ購読情報を送る関数
     // ---------------------------------------------------------
     function sendSubscriptionToDjango(subscription) {
         fetch('/accounts/subscribe/', {

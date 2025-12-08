@@ -401,3 +401,75 @@ class DebugPasswordResetView(PasswordResetView):
     def form_valid(self, form):
         print(f"--- DEBUG: form_valid が呼ばれました。メール送信ロジックに進みます。---{Site.objects.get(pk=settings.SITE_ID)}")
         return super().form_valid(form)
+    
+
+# ----------------
+# Stripe Webhock(未使用)
+#-----------------
+import stripe
+from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+# ユーザーモデルやメール送信機能をインポート
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+@csrf_exempt # StripeからのリクエストにはCSRFトークンがないため必須
+@require_POST
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    event = None
+
+    try:
+        # 署名の検証（セキュリティ対策：本当にStripeからの通信か確認）
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError as e:
+        # ペイロードが無効
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        # 署名が無効
+        return HttpResponse(status=400)
+
+    # --- イベントごとの処理 ---
+    if event['type'] == 'invoice.payment_failed':
+        invoice = event['data']['object']
+        customer_id = invoice['customer']
+        
+        # ここにビジネスロジックを記述します
+        handle_payment_failure(customer_id, invoice)
+
+    return HttpResponse(status=200)
+
+def handle_payment_failure(stripe_customer_id, invoice):
+    """
+    決済失敗時の処理ロジック
+    """
+    User = get_user_model()
+    try:
+        # StripeのCustomer IDからDjangoのユーザーを特定
+        # (事前にUserモデルにstripe_customer_idフィールドなどを持たせておく必要があります)
+        user = User.objects.get(stripe_customer_id=stripe_customer_id)
+        
+        # 処理1: ユーザーへの通知（メール等）
+        send_mail(
+            'お支払いに失敗しました',
+            f'{user.username} 様\nカード決済が失敗しました。会員ページよりカード情報を更新してください。',
+            'noreply@yourdomain.com',
+            [user.email],
+        )
+
+        # 処理2: 権限の変更（必要に応じて）
+        # 例: ステータスを「支払い遅延」に変更するなど
+        # user.subscription_status = 'past_due'
+        # user.save()
+        
+        print(f"User {user.id}: Payment failed notification sent.")
+
+    except User.DoesNotExist:
+        print("User not found for this Stripe customer.")

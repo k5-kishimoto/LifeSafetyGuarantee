@@ -292,8 +292,8 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 SF_INSTANCE_URL = os.environ.get('SF_INSTANCE_URL') # 例: https://yourdomain.my.salesforce.com
 SF_CLIENT_ID = os.environ.get('SF_CLIENT_ID')
 SF_CLIENT_SECRET = os.environ.get('SF_CLIENT_SECRET')
-SF_USERNAME = os.environ.get('SF_USERNAME') # APIユーザーのユーザー名
-SF_PASSWORD = os.environ.get('SF_PASSWORD') # APIユーザーのパスワード + セキュリティトークン
+
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
 VAPID_PUBLIC_KEY = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFymZTk830JUFayUF_k0raG9o1XEM8'
 VAPID_PRIVATE_KEY = 'erdqpRXihfjvCkLhOM_HxmttIDaev2lvf2Ww01VFVhY'
