@@ -95,7 +95,7 @@ def get_contractor_info_by_username(username):
     
     # ユーザー名でレコードを検索し、必要なフィールドを取得するSOQL
     soql_query = (
-        f"SELECT Id, Name, LastName__c, FirstName__c, BusinessName__c, PropertyName__c, RoomName__c, PaymentStart__c "
+        f"SELECT Id, Name, LastName__c, FirstName__c, RoomName__c, PaymentStart__c "
         f"FROM LeavingGuaranteeContractor__c "
         f"WHERE Name = '{username}' and IsMovedOut__c = False LIMIT 1"
     )
@@ -495,7 +495,7 @@ def get_all_agencies_for_choices():
     
 
 # 💡 決済ステータスを更新する関数を追加 💡
-def update_contractor_payment_status(username,status,isend):
+def update_contractor_payment_status(username, is_paying, isend):
     """
     ユーザー名に基づいてLeavingGuaranteeContractor__cの
     PaymentStart__c 項目を True に更新する
@@ -527,23 +527,23 @@ def update_contractor_payment_status(username,status,isend):
             # 2. 特定したレコードIDに対して更新 (PATCH) を実行
             update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
             
-            if status:
+            if is_paying:
                 payload = {
                     "PaymentStart__c": True,
-                    "Paying__c": status,  # Boolean項目を更新
+                    "Paying__c": is_paying,  # Boolean項目を更新
                     "MoveInDate__c" : now_str
                 }
 
             else:
                 if isend:
                     payload = {
-                        "Paying__c": status,
+                        "Paying__c": is_paying,
                         "IsMovedOut__c": isend,
                         "MovedOutDate__c" : now_str
                     }
                 else:
                     payload = {
-                        "Paying__c": status,
+                        "Paying__c": is_paying,
                     }
             
             update_response = requests.patch(update_url, headers=headers, data=json.dumps(payload))
@@ -594,6 +594,7 @@ def update_salesforce_stripe_info(username, customer_id, subscription_id):
                 "StripeCustomerId__c": customer_id,
                 "StripeSubscriptionId__c": subscription_id,
                 "PaymentStart__c": True,
+                "Paying__c": True,
                 "MoveInDate__c" : now_str
             }
             requests.patch(update_url, headers=headers, data=json.dumps(payload))
