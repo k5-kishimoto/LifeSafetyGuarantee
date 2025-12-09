@@ -95,7 +95,7 @@ def get_contractor_info_by_username(username):
     
     # ユーザー名でレコードを検索し、必要なフィールドを取得するSOQL
     soql_query = (
-        f"SELECT Id, Name, LastName__c, FirstName__c, RoomName__c, PaymentStart__c "
+        f"SELECT Id, Name, LastName__c, FirstName__c, PropertyName__c, RoomName__c, PaymentStart__c "
         f"FROM LeavingGuaranteeContractor__c "
         f"WHERE Name = '{username}' and IsMovedOut__c = False LIMIT 1"
     )
