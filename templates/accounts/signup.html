@@ -57,7 +57,7 @@
                     {% endfor %}
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">アカウントを作成し、入居者登録を完了する</button>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitButton">アカウントを作成し、入居者登録を完了する</button>
                     </div>
                 </form>
             </div>
@@ -69,4 +69,22 @@
 
     </div>
 </div>
+<script>
+    (function() {
+        const form = document.getElementById('signupForm');
+        const button = document.getElementById('submitButton');
+
+        if (form && button) {
+            form.addEventListener('submit', function(event) {
+                // 1. ボタンを無効化する (これで2回目が押せなくなります)
+                button.disabled = true;
+
+                // 2. ボタンのテキストを変更して、処理中であることを伝える (Bootstrapのスピナーを使用)
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
+                
+                // 3. フォームの送信はそのまま続行されます
+            });
+        }
+    })();
+</script>
 {% endblock %}
