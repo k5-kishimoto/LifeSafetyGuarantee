@@ -170,7 +170,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ja'
 
 TIME_ZONE = 'UTC'
 
@@ -225,9 +226,9 @@ if ALLOWED_HOSTS_ENV:
 else:
     # 環境変数がない場合のデフォルト設定
     ALLOWED_HOSTS = [
-        'lifesafetyguarantee.fly.dev', # 💡 Fly.ioのドメインを確実に追加
         '127.0.0.1', 
         'localhost', 
+        'lifesafetyguarantee.fly.dev', # 💡 Fly.ioのドメインを確実に追加
     ]
 
 # 2. Render向け（Renderを使っていないなら削除して良い）

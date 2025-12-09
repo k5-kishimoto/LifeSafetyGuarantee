@@ -10,8 +10,9 @@ import html # 💡 これを追加
 # 簡易的なSHA256ハッシュ関数
 def hash_password(password):
     return sha256(password.encode('utf-8')).hexdigest()
-
+#----------------------------------------
 # Salesforce OAuth トークンを取得する関数
+#----------------------------------------
 def get_auth_token():
     """API接続用のアクセストークンを取得 (APIユーザー認証)"""
     url = f"{settings.SF_INSTANCE_URL}/services/oauth2/token"
@@ -94,9 +95,9 @@ def get_contractor_info_by_username(username):
     
     # ユーザー名でレコードを検索し、必要なフィールドを取得するSOQL
     soql_query = (
-        f"SELECT Id, Name, LastName__c, FirstName__c, BusinessName__c, PropertyName__c, RoomName__c "
+        f"SELECT Id, Name, LastName__c, FirstName__c, BusinessName__c, PropertyName__c, RoomName__c, PaymentStart__c "
         f"FROM LeavingGuaranteeContractor__c "
-        f"WHERE Name = '{username}' LIMIT 1"
+        f"WHERE Name = '{username}' and IsMovedOut__c = False LIMIT 1"
     )
     
     query_url = f"{instance_url}/services/data/{api_version}/query"
@@ -118,6 +119,7 @@ def get_contractor_info_by_username(username):
                 'contractor_name': record.get('BusinessName__c'),
                 'property_name': record.get('PropertyName__c'),
                 'room_name': record.get('RoomName__c'),
+                'payment_start': record.get('PaymentStart__c'),
             }
         
     except requests.exceptions.RequestException as e:
@@ -126,75 +128,9 @@ def get_contractor_info_by_username(username):
 
     return None
 
-# 💡 決済ステータスを更新する関数を追加 💡
-def update_contractor_payment_status(username,status,isend):
-    """
-    ユーザー名に基づいてLeavingGuaranteeContractor__cの
-    PaymentStart__c 項目を True に更新する
-    """
-    token, instance_url, error = get_auth_token()
-    if not token:
-        return False
-
-    api_version = 'v58.0'
-    
-    # 1. まずユーザー名でレコードID (Id) を取得する
-    soql_query = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
-    query_url = f"{instance_url}/services/data/{api_version}/query"
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
-    params = {'q': soql_query}
-    now_str = datetime.now().strftime('%Y-%m-%d')
-    try:
-        # レコード検索
-        response = requests.get(query_url, headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
-
-        if data['totalSize'] == 1:
-            record_id = data['records'][0]['Id']
-            
-            # 2. 特定したレコードIDに対して更新 (PATCH) を実行
-            update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
-            
-            if status:
-                payload = {
-                    "PaymentStart__c": True,
-                    "Paying__c": status,  # Boolean項目を更新
-                    "MoveInDate__c" : now_str
-                }
-
-            else:
-                if isend:
-                    payload = {
-                        "Paying__c": status,
-                        "IsMovedOut__c": isend
-                    }
-                else:
-                    payload = {
-                        "Paying__c": status,
-                        "MovedOutDate__c" : now_str
-                    }
-            
-            update_response = requests.patch(update_url, headers=headers, data=json.dumps(payload))
-            
-            # 204 No Content が返ってくれば成功
-            if update_response.status_code == 204:
-                return True
-            else:
-                print(f"Salesforce Update Failed: {update_response.text}")
-                return False
-        else:
-            print(f"User not found in Salesforce: {username}")
-            return False
-
-    except requests.exceptions.RequestException as e:
-        print(f"Salesforce API Error: {e}")
-        return False
-    
-# 💡 Web Push購読情報を「追加」する関数 💡
+# ---------------------------------------
+# 💡 Web Push購読情報を「追加」する関数 
+# ---------------------------------------💡
 def add_salesforce_webpush_subscription(username, subscription_json, user_agent=''):
     """Web Push購読情報を追加 (重複チェック付き)"""
     token, instance_url, error = get_auth_token()
@@ -265,8 +201,10 @@ def add_salesforce_webpush_subscription(username, subscription_json, user_agent=
     except Exception as e:
         print(f"Python Exception (WebPush Add): {e}")
         return False
-    
+
+#-----------------------------------------
 # 💡 全てのWeb Push購読情報を取得する関数 💡
+#-----------------------------------------
 def get_all_webpush_subscriptions(username):
     """
     ユーザーに紐づく全ての GuaranteeWebNotification__c を取得する
@@ -316,7 +254,9 @@ def get_all_webpush_subscriptions(username):
         print(f"Salesforce WebPush Fetch Error: {e}")
         return []
 
+#--------------------------------------------------------
 # 💡 無効な購読情報を削除する関数 (通知送信エラー時に使用) 💡
+#--------------------------------------------------------
 def delete_webpush_subscription(sf_id):
     token, instance_url, error = get_auth_token()
     if not token: return
@@ -331,6 +271,7 @@ def delete_webpush_subscription(sf_id):
     except Exception as e:
         print(f"Delete Error: {e}")
 
+#-------------Web push End ------------------------------
 
 # 💡 1. メッセージを送信（Salesforceに保存）する関数 💡
 def create_salesforce_message(username, subject, body):
@@ -551,3 +492,114 @@ def get_all_agencies_for_choices():
         print(f"Salesforce Agency Fetch Error: {e}")
         # API接続失敗時も空の選択肢を返せるよう、初期値の選択肢を返します
         return [('', '--- 業者名を取得できませんでした ---')]
+    
+
+# 💡 決済ステータスを更新する関数を追加 💡
+def update_contractor_payment_status(username,status,isend):
+    """
+    ユーザー名に基づいてLeavingGuaranteeContractor__cの
+    PaymentStart__c 項目を True に更新する
+    """
+    token, instance_url, error = get_auth_token()
+    if not token:
+        return False
+
+    api_version = 'v58.0'
+    
+    # 1. まずユーザー名でレコードID (Id) を取得する
+    soql_query = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
+    query_url = f"{instance_url}/services/data/{api_version}/query"
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+    params = {'q': soql_query}
+    now_str = datetime.now().strftime('%Y-%m-%d')
+    try:
+        # レコード検索
+        response = requests.get(query_url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        if data['totalSize'] == 1:
+            record_id = data['records'][0]['Id']
+            
+            # 2. 特定したレコードIDに対して更新 (PATCH) を実行
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
+            
+            if status:
+                payload = {
+                    "PaymentStart__c": True,
+                    "Paying__c": status,  # Boolean項目を更新
+                    "MoveInDate__c" : now_str
+                }
+
+            else:
+                if isend:
+                    payload = {
+                        "Paying__c": status,
+                        "IsMovedOut__c": isend,
+                        "MovedOutDate__c" : now_str
+                    }
+                else:
+                    payload = {
+                        "Paying__c": status,
+                    }
+            
+            update_response = requests.patch(update_url, headers=headers, data=json.dumps(payload))
+            
+            # 204 No Content が返ってくれば成功
+            if update_response.status_code == 204:
+                return True
+            else:
+                print(f"Salesforce Update Failed: {update_response.text}")
+                return False
+        else:
+            print(f"User not found in Salesforce: {username}")
+            return False
+
+    except requests.exceptions.RequestException as e:
+        print(f"Salesforce API Error: {e}")
+        return False
+
+
+def update_salesforce_stripe_info(username, customer_id, subscription_id):
+    """
+    Stripeの顧客IDとサブスクリプションIDをSalesforceに保存し、
+    支払い開始フラグ(PaymentStart__c)をTrueにする
+    """
+    auth_result = get_auth_token()
+    # トークン取得処理... (省略)
+    token, instance_url = auth_result[:2] # 簡易記述
+
+    if not token: return False
+
+    api_version = 'v58.0'
+    headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+
+    try:
+        now_str = datetime.now().strftime('%Y-%m-%d')
+        # ID取得
+        soql = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
+        query_url = f"{instance_url}/services/data/{api_version}/query"
+        res = requests.get(query_url, headers=headers, params={'q': soql})
+        data = res.json()
+
+        if data['totalSize'] == 1:
+            record_id = data['records'][0]['Id']
+            
+            # 更新
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{record_id}"
+            payload = {
+                "StripeCustomerId__c": customer_id,
+                "StripeSubscriptionId__c": subscription_id,
+                "PaymentStart__c": True,
+                "MoveInDate__c" : now_str
+            }
+            requests.patch(update_url, headers=headers, data=json.dumps(payload))
+            return True
+            
+        return False
+    except Exception as e:
+        print(f"SF Update Error: {e}")
+        return False

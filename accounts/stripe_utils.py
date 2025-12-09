@@ -138,3 +138,39 @@ def create_customer_portal_session(user, request_host_url):
         return False, f"Stripe APIエラー: {e.user_message or e.code}"
     except Exception as e:
         return False, f"予期せぬエラー: {e}"
+    
+    # accounts/stripe_utils.py (追記)
+
+def get_stripe_info_by_email(email):
+    """
+    メールアドレスからStripe顧客IDと、最新の有効なサブスクリプションIDを取得する
+    戻り値: (customer_id, subscription_id)
+    """
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    
+    try:
+        # 1. メールアドレスで顧客を検索 (最新の1件)
+        customers = stripe.Customer.list(email=email, limit=1)
+        
+        if not customers or not customers.data:
+            return None, None
+            
+        customer = customers.data[0]
+        customer_id = customer.id
+        
+        # 2. その顧客のアクティブなサブスクリプションを検索
+        subscriptions = stripe.Subscription.list(
+            customer=customer_id, 
+            status='active', 
+            limit=1
+        )
+        
+        subscription_id = None
+        if subscriptions and subscriptions.data:
+            subscription_id = subscriptions.data[0].id
+            
+        return customer_id, subscription_id
+
+    except Exception as e:
+        print(f"Stripe Search Error: {e}")
+        return None, None

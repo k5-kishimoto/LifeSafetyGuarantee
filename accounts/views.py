@@ -22,12 +22,12 @@ from django.views.decorators.http import require_POST
 from .forms import SendMessageForm
 from .utils import send_push_notification_to_user
 # 💡 Salesforce連携関数をインポート 💡
-from .salesforce import create_salesforce_message, get_all_contractors, create_message_by_sf_id, update_contractor_payment_status, get_contractor_info_by_username, get_auth_token, register_salesforce_contractor, add_salesforce_webpush_subscription, get_contractor_messages, update_salesforce_password, hash_password # インポート追加
+from .salesforce import create_salesforce_message, get_all_contractors, create_message_by_sf_id, update_contractor_payment_status,update_salesforce_stripe_info, get_contractor_info_by_username, get_auth_token, register_salesforce_contractor, add_salesforce_webpush_subscription, get_contractor_messages, update_salesforce_password, hash_password # インポート追加
 
 # 管理者(スーパーユーザー)のみアクセス可能にする
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import SendMessageForm, BulkSendMessageForm # BulkSendMessageFormを追加
-from .stripe_utils import create_subscription_checkout_session, cancel_stripe_subscription, create_customer_portal_session # 新しい関数をインポート
+from .stripe_utils import create_subscription_checkout_session, cancel_stripe_subscription, create_customer_portal_session, get_stripe_info_by_email # 新しい関数をインポート
 from django.contrib.sites.models import Site
 
 @staff_member_required
@@ -225,18 +225,36 @@ def create_checkout_session_view(request):
 @require_POST
 def cancel_subscription_view(request):
     """
-    StripeサブスクリプションとSalesforceレコードを解約する
+    StripeサブスクリプションとSalesforceレコードを解約し、
+    成功した場合はローカルユーザーを削除する
     """
-    username = request.user.username
+    user = request.user # 削除する前にユーザーオブジェクトを取得
+    username = user.username
     
+    # 1. Stripe解約 & Salesforce更新 (既存のロジック)
     success, message = cancel_stripe_subscription(username)
     
     if success:
-        messages.success(request, f"サービス解約処理が完了しました: {message}")
+        # 2. 成功した場合: ローカルユーザーを削除
+        try:
+            # ユーザーを削除 (これにより関連するセッションなども無効化されます)
+            user.delete()
+            
+            # メッセージを残してログイン画面へ
+            # (ユーザー削除直後でも、リダイレクト直後の1回だけメッセージが表示される場合があります)
+            messages.success(request, "退去処理が完了しました。ご利用ありがとうございました。")
+            
+            # ユーザーが存在しなくなったため、ホームではなくログイン画面へ飛ばす
+            return redirect('login')
+            
+        except Exception as e:
+            # 万が一削除に失敗した場合
+            messages.error(request, f"解約は完了しましたが、アカウント削除に失敗しました: {e}")
+            return redirect('home')
     else:
+        # 3. 失敗した場合: エラーを表示してホームに戻る
         messages.error(request, f"解約処理中にエラーが発生しました: {message}")
-        
-    return redirect('home') # ホーム画面に戻す
+        return redirect('home')
 
 @login_required
 def manage_payment_method_view(request):
@@ -279,21 +297,30 @@ def home_view(request):
     context['messages_list'] = messages_list
     
     # GETパラメータから決済結果を取得しメッセージを準備
+    # GETパラメータから決済結果を取得
     payment_status = request.GET.get('payment')
     
     if payment_status == 'success':
-        # 💡 Salesforceのステータスを更新する処理を追加 💡
-        sf_updated = update_contractor_payment_status(request.user.username,status=True, isend=False)
+        username = request.user.username # メールアドレスとして使用
         
-        if sf_updated:
-            messages.success(request, '決済が完了し、入居サービスの利用が開始されました！')
+        # 💡 1. Stripeから顧客IDとサブスクIDを検索 💡
+        customer_id, subscription_id = get_stripe_info_by_email(username)
+        
+        if customer_id and subscription_id:
+            # 💡 2. Salesforceを更新 (顧客ID, サブスクID, 支払いフラグ) 💡
+            sf_updated = update_salesforce_stripe_info(username, customer_id, subscription_id)
+            
+            if sf_updated:
+                messages.success(request, '決済が完了し、Salesforceへの連携が完了しました！')
+            else:
+                messages.warning(request, '決済は完了しましたが、Salesforceの更新に失敗しました。')
         else:
-            # 決済はできたがSF更新に失敗した場合
-            messages.warning(request, '決済は完了しましたが、システム連携に遅延が発生しています。管理者に連絡してください。')
+            # Stripe上でデータが見つからなかった場合（タイムラグ等の可能性）
+            messages.warning(request, '決済情報は確認中ですが、Stripe情報の取得に時間がかかっています。')
+
     elif payment_status == 'cancelled':
         messages.warning(request, '決済がキャンセルされました。')
 
-    # Django Messagesがコンテキストにメッセージを自動で含めるため、ここではメッセージ表示ロジックは不要
     return render(request, 'accounts/home.html', context)
 
 class NoOldPasswordChangeView(LoginRequiredMixin, FormView):

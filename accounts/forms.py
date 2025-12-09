@@ -14,7 +14,19 @@ User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     # ユーザー名とパスワード
-    username = forms.CharField(label='ユーザー名（メールアドレス）', max_length=150, required=True)
+    username = forms.EmailField(
+        label='ユーザー名（メールアドレス）', 
+        max_length=150, 
+        required=True,
+        # HTML5のメール入力フォームを使用（スマホで入力しやすくなります）
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'example@email.com'}),
+        error_messages={
+            'required': 'メールアドレスは必須です。',
+            'invalid': '正しいメールアドレスの形式で入力してください。', # 👈 形式エラー時の日本語メッセージ
+            'unique': 'このメールアドレスは既に登録されています。',
+            'max_length': 'メールアドレスは150文字以内で入力してください。',
+        }
+    )
     last_name = forms.CharField(label='姓', max_length=50, required=True)
     first_name = forms.CharField(label='名', max_length=50, required=True)
     password1 = forms.CharField(label='パスワード', widget=PasswordInput, strip=False)
