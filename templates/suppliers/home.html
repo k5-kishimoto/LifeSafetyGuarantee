@@ -36,8 +36,7 @@
                             {% for contractor in contractors %}
                             <tr>
                                 <td>{{ contractor.full_name }}</td>
-                                <td>{{ contractor.property_name }}</td>
-                                <td>{{ contractor.room_name }}</td>
+                                <td>{{ contractor.property_name }} {{ contractor.room_name }}</td>
                                 <td>{{ contractor.telephone }}</td>
                                 <td>{{ contractor.id }}</td>
                                 <td class="text-center">
