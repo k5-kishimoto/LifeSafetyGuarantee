@@ -133,9 +133,9 @@ def get_contractor_info_by_username(username):
 # ---------------------------------------💡
 def get_salesforce_webpush_subscriptions(username):
     """
-    指定ユーザー(username)に紐づく GuaranteeWebNotification__c のレコードを取得する
+    指定ユーザーに紐づくWebPush購読情報を取得する
     """
-    token, instance_url, _ = get_auth_token() # 簡易アンパック
+    token, instance_url, _ = get_auth_token()[:3] if len(get_auth_token()) >= 3 else (*get_auth_token(), "")
     if not token: return []
 
     api_version = 'v58.0'
@@ -143,7 +143,7 @@ def get_salesforce_webpush_subscriptions(username):
     query_url = f"{instance_url}/services/data/{api_version}/query"
 
     try:
-        # 1. まずユーザー(Contractor)のIDを取得
+        # 1. ユーザーID取得
         soql_user = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
         res_user = requests.get(query_url, headers=headers, params={'q': soql_user})
         data_user = res_user.json()
@@ -153,8 +153,9 @@ def get_salesforce_webpush_subscriptions(username):
             
         user_id = data_user['records'][0]['Id']
 
-        # 2. そのユーザーに紐づくサブスクリプションを取得
-        # (Contractor__c が参照項目である前提)
+        # 2. 購読情報取得
+        # 🚨 修正箇所: オブジェクト名を GuaranteeWebNotification__c に変更
+        # 🚨 修正箇所: WHERE句の項目名を Contractor__c に変更 (Salesforceの設定に合わせて！)
         soql_sub = (
             f"SELECT EndpointUrl__c, P256dh__c, Auth__c "
             f"FROM GuaranteeWebNotification__c "
@@ -163,6 +164,9 @@ def get_salesforce_webpush_subscriptions(username):
         
         res_sub = requests.get(query_url, headers=headers, params={'q': soql_sub})
         data_sub = res_sub.json()
+        
+        # デバッグ用: 取得できた件数を表示
+        print(f"DEBUG: Found {data_sub.get('totalSize')} subscriptions for {username}")
         
         return data_sub.get('records', [])
 
