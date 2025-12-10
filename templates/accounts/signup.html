@@ -27,7 +27,7 @@
 
                 <h5 class="card-title text-center text-muted mb-4">アカウント情報をご入力ください</h5>
 
-                <form method="post">
+                <form method="post" id="signupForm" onsubmit="return confirm('入力情報は正しいですか？');">
                     {% csrf_token %}
                     
                     {% if next_url %}

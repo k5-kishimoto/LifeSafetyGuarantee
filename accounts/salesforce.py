@@ -131,6 +131,45 @@ def get_contractor_info_by_username(username):
 # ---------------------------------------
 # 💡 Web Push購読情報を「追加」する関数 
 # ---------------------------------------💡
+def get_salesforce_webpush_subscriptions(username):
+    """
+    指定ユーザー(username)に紐づく WebPushSubscription__c のレコードを取得する
+    """
+    token, instance_url, _ = get_auth_token() # 簡易アンパック
+    if not token: return []
+
+    api_version = 'v58.0'
+    headers = {'Authorization': f'Bearer {token}'}
+    query_url = f"{instance_url}/services/data/{api_version}/query"
+
+    try:
+        # 1. まずユーザー(Contractor)のIDを取得
+        soql_user = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
+        res_user = requests.get(query_url, headers=headers, params={'q': soql_user})
+        data_user = res_user.json()
+        
+        if data_user['totalSize'] == 0:
+            return []
+            
+        user_id = data_user['records'][0]['Id']
+
+        # 2. そのユーザーに紐づくサブスクリプションを取得
+        # (Contractor__c が参照項目である前提)
+        soql_sub = (
+            f"SELECT Endpoint__c, P256dh__c, Auth__c "
+            f"FROM WebPushSubscription__c "
+            f"WHERE Contractor__c = '{user_id}'"
+        )
+        
+        res_sub = requests.get(query_url, headers=headers, params={'q': soql_sub})
+        data_sub = res_sub.json()
+        
+        return data_sub.get('records', [])
+
+    except Exception as e:
+        print(f"Salesforce Subscription Fetch Error: {e}")
+        return []
+    
 def add_salesforce_webpush_subscription(username, subscription_json, user_agent=''):
     """Web Push購読情報を追加 (重複チェック付き)"""
     token, instance_url, error = get_auth_token()
