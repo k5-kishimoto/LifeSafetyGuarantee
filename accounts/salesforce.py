@@ -133,7 +133,7 @@ def get_contractor_info_by_username(username):
 # ---------------------------------------💡
 def get_salesforce_webpush_subscriptions(username):
     """
-    指定ユーザー(username)に紐づく WebPushSubscription__c のレコードを取得する
+    指定ユーザー(username)に紐づく GuaranteeWebNotification__c のレコードを取得する
     """
     token, instance_url, _ = get_auth_token() # 簡易アンパック
     if not token: return []
@@ -157,7 +157,7 @@ def get_salesforce_webpush_subscriptions(username):
         # (Contractor__c が参照項目である前提)
         soql_sub = (
             f"SELECT Endpoint__c, P256dh__c, Auth__c "
-            f"FROM WebPushSubscription__c "
+            f"FROM GuaranteeWebNotification__c "
             f"WHERE Contractor__c = '{user_id}'"
         )
         
@@ -252,14 +252,14 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
         if existing_record_id:
             # 4A. 更新 (Update)
             print(f"Existing subscription found (ID: {existing_record_id}). Updating...")
-            update_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c/{existing_record_id}"
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/GuaranteeWebNotification__c/{existing_record_id}"
             res_update = requests.patch(update_url, headers=headers, data=json.dumps(payload))
             res_update.raise_for_status()
             print(f"WebPush Subscription Updated for {username}")
         else:
             # 4B. 新規作成 (Create)
             print("No matching subscription found. Creating new...")
-            create_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c"
+            create_url = f"{instance_url}/services/data/{api_version}/sobjects/GuaranteeWebNotification__c"
             res_create = requests.post(create_url, headers=headers, data=json.dumps(payload))
             
             if res_create.status_code == 201:
