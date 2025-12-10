@@ -170,15 +170,30 @@ def get_salesforce_webpush_subscriptions(username):
         print(f"Salesforce Subscription Fetch Error: {e}")
         return []
     
+# accounts/salesforce.py
+
+import requests
+import json
+from django.conf import settings
+
+# ... (get_auth_token 関数はそのまま) ...
+
 def add_salesforce_webpush_subscription(username, subscription_data, user_agent):
     """
     WebPushの購読情報をSalesforceに保存する。
-    既存のエンドポイントがあれば更新、なければ新規作成する。
+    長すぎるEndpoint対策として、ユーザーIDで検索してからPython側で判定を行う。
     """
-    token, instance_url, auth_error = get_auth_token()[:3] if len(get_auth_token()) >= 3 else (*get_auth_token(), "")
-    if not token:
-        print(f"SF Save Error: {auth_error}")
+    auth_result = get_auth_token()
+    
+    # トークン取得チェック
+    if not auth_result or auth_result[0] is None:
+        print("SF Save Error: Authentication failed.")
         return False
+
+    if len(auth_result) == 3:
+        token, instance_url, _ = auth_result
+    else:
+        token, instance_url = auth_result
 
     api_version = 'v58.0'
     headers = {
@@ -190,7 +205,9 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
         # 1. ユーザー(Contractor)のIDを取得
         soql_user = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
         query_url = f"{instance_url}/services/data/{api_version}/query"
+        
         res_user = requests.get(query_url, headers=headers, params={'q': soql_user})
+        res_user.raise_for_status() # エラーならここで停止
         data_user = res_user.json()
 
         if data_user['totalSize'] == 0:
@@ -199,40 +216,54 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
 
         user_id = data_user['records'][0]['Id']
 
-        # データの抽出
-        endpoint = subscription_data.get('endpoint')
+        # 送信されたデータ
+        new_endpoint = subscription_data.get('endpoint')
         keys = subscription_data.get('keys', {})
         p256dh = keys.get('p256dh')
         auth = keys.get('auth')
 
-        # 2. 既存の購読があるかチェック (Endpoint__c で検索)
-        # 💡 iOSのエンドポイントは長いため、完全一致検索が難しい場合がありますが、
-        #    まずはEndpoint__cで重複チェックを行います。
-        soql_check = f"SELECT Id FROM WebPushSubscription__c WHERE Endpoint__c = '{endpoint}' LIMIT 1"
+        # 2. ユーザーに紐づく既存の購読をすべて取得 (Endpoint__cで絞り込まない)
+        # 💡 ここで長いEndpointをWHERE句に使わないのがポイント 💡
+        soql_check = f"SELECT Id, Endpoint__c FROM WebPushSubscription__c WHERE Contractor__c = '{user_id}'"
+        
         res_check = requests.get(query_url, headers=headers, params={'q': soql_check})
+        res_check.raise_for_status() # エラーチェック
         data_check = res_check.json()
 
+        # 3. Python側でEndpointの一致を確認
+        existing_record_id = None
+        
+        if data_check['totalSize'] > 0:
+            for record in data_check['records']:
+                # DBの値と、今回送られてきた値を比較
+                if record.get('Endpoint__c') == new_endpoint:
+                    existing_record_id = record['Id']
+                    break
+
+        # 保存用ペイロード
         payload = {
             "Contractor__c": user_id,
-            "Endpoint__c": endpoint,
+            "Endpoint__c": new_endpoint,
             "P256dh__c": p256dh,
             "Auth__c": auth,
-            "UserAgent__c": user_agent[:255] # 長すぎる場合はカット
+            "UserAgent__c": user_agent[:255] if user_agent else "Unknown"
         }
 
-        if data_check['totalSize'] > 0:
-            # 3A. 更新 (Update)
-            sub_id = data_check['records'][0]['Id']
-            update_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c/{sub_id}"
-            requests.patch(update_url, headers=headers, data=json.dumps(payload))
-            print(f"WebPush Subscription Updated for {username} (iOS)")
+        if existing_record_id:
+            # 4A. 更新 (Update)
+            print(f"Existing subscription found (ID: {existing_record_id}). Updating...")
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c/{existing_record_id}"
+            res_update = requests.patch(update_url, headers=headers, data=json.dumps(payload))
+            res_update.raise_for_status()
+            print(f"WebPush Subscription Updated for {username}")
         else:
-            # 3B. 新規作成 (Create)
+            # 4B. 新規作成 (Create)
+            print("No matching subscription found. Creating new...")
             create_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c"
             res_create = requests.post(create_url, headers=headers, data=json.dumps(payload))
             
             if res_create.status_code == 201:
-                print(f"WebPush Subscription Created for {username} (iOS)")
+                print(f"WebPush Subscription Created for {username}")
             else:
                 print(f"SF Create Error: {res_create.text}")
                 return False
@@ -241,6 +272,8 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
 
     except Exception as e:
         print(f"Add Subscription Exception: {e}")
+        import traceback
+        traceback.print_exc()
         return False
     
 #-----------------------------------------
