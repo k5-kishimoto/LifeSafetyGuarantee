@@ -103,7 +103,7 @@ def get_contractors_for_agency(agency_username):
             f"SELECT Name, Fullname__c, PropertyName__c, RoomName__c, Telephone__c, MoveInDate__c, PaymentStart__c, IsMovedOut__c, MovedOutDate__c, IsCancel__c, AssurancePrice__c, CumulativeOccupancyMonths__c "
             f"FROM LeavingGuaranteeContractor__c "
             f"WHERE Supplier__c = '{agency_id}' AND IsAssurancePaying__c = False "
-            f"ORDER BY PropertyName__c DESC"
+            f"ORDER BY RoomName__c, PropertyName__c DESC"
         )
         
         response_contractors = requests.get(query_url, headers=headers, params={'q': soql_contractors})
