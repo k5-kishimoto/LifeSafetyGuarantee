@@ -51,7 +51,7 @@ def send_push_notification_to_user(user, title, body, message_id=None):
     # 3. 各デバイス（サブスクリプション）へ送信
     for sub in subscriptions:
         # Salesforceの WebPushSubscription__c オブジェクトのフィールド名を使用
-        endpoint = sub.get('Endpoint__c')
+        endpoint = sub.get('EndpointURL__c')
         p256dh = sub.get('P256dh__c')
         auth = sub.get('Auth__c')
         
