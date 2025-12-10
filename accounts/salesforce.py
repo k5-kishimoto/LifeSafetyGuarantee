@@ -224,7 +224,7 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
 
         # 2. ユーザーに紐づく既存の購読をすべて取得 (Endpoint__cで絞り込まない)
         # 💡 ここで長いEndpointをWHERE句に使わないのがポイント 💡
-        soql_check = f"SELECT Id, Endpoint__c FROM WebPushSubscription__c WHERE Contractor__c = '{user_id}'"
+        soql_check = f"SELECT Id, Endpoint__c FROM GuaranteeWebNotification__c WHERE Contractor__c = '{user_id}'"
         
         res_check = requests.get(query_url, headers=headers, params={'q': soql_check})
         res_check.raise_for_status() # エラーチェック
