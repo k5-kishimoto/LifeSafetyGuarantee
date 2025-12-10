@@ -34,6 +34,7 @@
                                 <th>入居日</th>
                                 <th>入居月数</th>
                                 <th>途中解約</th>
+                                <th>退去日</th>
                                 <th>退去保証金</th>
                             </tr>
                         </thead>
@@ -50,14 +51,15 @@
                                     {% else %}
                                     <span class="text-danger fw-bold" title="未払い">❌</span>
                                     {% endif %}
-                                <td>{{ contractor.move_in_date }}</td>
-                                <td>{{ contractor.months }}か月</td>
+                                <td>{{ contractor.move_in_date|default_if_none:"" }}</td>
+                                <td>{{ contractor.months|default_if_none:"" }}か月</td>
                                 <td class="text-center">
                                     {% if contractor.is_cancel %}
                                     <span class="text-success fw-bold" title="解約済み">❌</span>
                                     {% else %}
                                     <span class="text-danger fw-bold" title="未解約"></span>
                                     {% endif %}
+                                <td>{{ contractor.move_out_date|default_if_none:"" }}</td>
                                 <td>{{ contractor.assurance_price|floatformat:0|intcomma }}円</td>
                             </tr>
                             {% endfor %}
