@@ -123,14 +123,18 @@ def send_message_view(request):
         
     return render(request, 'accounts/send_message.html', {'form': form})
 
+# accounts/views.py
+
 @require_POST
 @login_required
 def subscribe_push(request):
     try:
         subscription_data = json.loads(request.body)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
         
-        # 💡 追加関数を呼び出し 💡
+        # HTTPヘッダーからUserAgentを取得
+        user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
+        
+        # 保存関数を呼び出し
         success = add_salesforce_webpush_subscription(
             request.user.username, 
             subscription_data,
@@ -140,9 +144,12 @@ def subscribe_push(request):
         if success:
             return JsonResponse({'status': 'ok'})
         else:
-            return JsonResponse({'status': 'error', 'message': 'Salesforce update failed'}, status=500)
+            # ここでエラーになってもJS側はコンソールエラーのみ
+            print("Salesforce save returned False")
+            return JsonResponse({'status': 'error', 'message': 'Salesforce save failed'}, status=500)
 
     except Exception as e:
+        print(f"Subscribe View Error: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 # -----------------------------------------------------------
 # サインアップビュー (CreateView)

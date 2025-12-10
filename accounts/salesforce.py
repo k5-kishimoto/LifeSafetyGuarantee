@@ -170,77 +170,79 @@ def get_salesforce_webpush_subscriptions(username):
         print(f"Salesforce Subscription Fetch Error: {e}")
         return []
     
-def add_salesforce_webpush_subscription(username, subscription_json, user_agent=''):
-    """Web Push購読情報を追加 (重複チェック付き)"""
-    token, instance_url, error = get_auth_token()
-    if not token: return False
+def add_salesforce_webpush_subscription(username, subscription_data, user_agent):
+    """
+    WebPushの購読情報をSalesforceに保存する。
+    既存のエンドポイントがあれば更新、なければ新規作成する。
+    """
+    token, instance_url, auth_error = get_auth_token()[:3] if len(get_auth_token()) >= 3 else (*get_auth_token(), "")
+    if not token:
+        print(f"SF Save Error: {auth_error}")
+        return False
+
     api_version = 'v58.0'
-    
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
 
     try:
-        # 1. 親レコード(Contractor)のIDを取得
-        soql_query = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
+        # 1. ユーザー(Contractor)のIDを取得
+        soql_user = f"SELECT Id FROM LeavingGuaranteeContractor__c WHERE Name = '{username}' LIMIT 1"
         query_url = f"{instance_url}/services/data/{api_version}/query"
-        
-        response = requests.get(query_url, headers=headers, params={'q': soql_query})
-        data = response.json()
+        res_user = requests.get(query_url, headers=headers, params={'q': soql_user})
+        data_user = res_user.json()
 
-        if data['totalSize'] == 1:
-            contractor_id = data['records'][0]['Id']
-            
-            # JSONデータの整形
-            if isinstance(subscription_json, str):
-                sub_data = json.loads(subscription_json)
-                sub_str = subscription_json
-            else:
-                sub_data = subscription_json
-                sub_str = json.dumps(subscription_json)
-            
-            endpoint_url = sub_data.get('endpoint')
-
-            # 💡 2. Python側での重複チェック (ロングテキストエリア対策) 💡
-            check_query = (
-                f"SELECT Id, EndpointUrl__c FROM GuaranteeWebNotification__c "
-                f"WHERE Contractor__c = '{contractor_id}'"
-            )
-            check_res = requests.get(query_url, headers=headers, params={'q': check_query})
-            
-            if check_res.status_code == 200:
-                existing_records = check_res.json().get('records', [])
-                for record in existing_records:
-                    if record.get('EndpointUrl__c') == endpoint_url:
-                        print("Subscription already exists.")
-                        return True # 既に存在するので成功とする
-
-            # 3. 新規レコード作成
-            create_url = f"{instance_url}/services/data/{api_version}/sobjects/GuaranteeWebNotification__c"
-            
-            payload = {
-                "Contractor__c": contractor_id,
-                "SubscriptionJson__c": sub_str,
-                "EndpointUrl__c": endpoint_url,
-                "UserAgent__c": user_agent[:255]
-            }
-            
-            create_res = requests.post(create_url, headers=headers, data=json.dumps(payload))
-            
-            if create_res.status_code == 201:
-                return True
-            else:
-                print(f"Salesforce WebPush Create Error: {create_res.text}")
-                return False
-        else:
-            print(f"Contractor not found: {username}")
+        if data_user['totalSize'] == 0:
+            print(f"Save Subscription Error: User {username} not found.")
             return False
 
-    except Exception as e:
-        print(f"Python Exception (WebPush Add): {e}")
-        return False
+        user_id = data_user['records'][0]['Id']
 
+        # データの抽出
+        endpoint = subscription_data.get('endpoint')
+        keys = subscription_data.get('keys', {})
+        p256dh = keys.get('p256dh')
+        auth = keys.get('auth')
+
+        # 2. 既存の購読があるかチェック (Endpoint__c で検索)
+        # 💡 iOSのエンドポイントは長いため、完全一致検索が難しい場合がありますが、
+        #    まずはEndpoint__cで重複チェックを行います。
+        soql_check = f"SELECT Id FROM WebPushSubscription__c WHERE Endpoint__c = '{endpoint}' LIMIT 1"
+        res_check = requests.get(query_url, headers=headers, params={'q': soql_check})
+        data_check = res_check.json()
+
+        payload = {
+            "Contractor__c": user_id,
+            "Endpoint__c": endpoint,
+            "P256dh__c": p256dh,
+            "Auth__c": auth,
+            "UserAgent__c": user_agent[:255] # 長すぎる場合はカット
+        }
+
+        if data_check['totalSize'] > 0:
+            # 3A. 更新 (Update)
+            sub_id = data_check['records'][0]['Id']
+            update_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c/{sub_id}"
+            requests.patch(update_url, headers=headers, data=json.dumps(payload))
+            print(f"WebPush Subscription Updated for {username} (iOS)")
+        else:
+            # 3B. 新規作成 (Create)
+            create_url = f"{instance_url}/services/data/{api_version}/sobjects/WebPushSubscription__c"
+            res_create = requests.post(create_url, headers=headers, data=json.dumps(payload))
+            
+            if res_create.status_code == 201:
+                print(f"WebPush Subscription Created for {username} (iOS)")
+            else:
+                print(f"SF Create Error: {res_create.text}")
+                return False
+
+        return True
+
+    except Exception as e:
+        print(f"Add Subscription Exception: {e}")
+        return False
+    
 #-----------------------------------------
 # 💡 全てのWeb Push購読情報を取得する関数 💡
 #-----------------------------------------
