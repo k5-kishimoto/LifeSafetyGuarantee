@@ -330,17 +330,23 @@
         const targetMsgId = urlParams.get('open_msg');
 
         if (targetMsgId) {
-            // IDを持つリンク要素を探す
-            // (前回の data-id ではなく data-target-id を使う形になりますが、
-            //  WebPushのロジックを変えるのは手間なので、リンクを見つけるロジックを修正します)
-            
-            // 修正: data-target-id が "msg-content-{ID}" になっている要素を探す
-            const targetElement = document.querySelector(`a[data-target-id="msg-content-${targetMsgId}"]`);
+            console.log("通知から起動しました。Target ID:", targetMsgId);
+
+            // 💡 修正: IDを持つリンク要素を探す
+            // data-target-id="msg-content-{ID}" となっている要素を探します
+            // {ID} はSalesforceのID (例: a0X...)
+            const selector = `a[data-target-id="msg-content-${targetMsgId}"]`;
+            const targetElement = document.querySelector(selector);
             
             if (targetElement) {
+                // モーダルを開く
                 openMessageModal(targetElement);
+
+                // URLからパラメータを消して綺麗にする
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({path: newUrl}, '', newUrl);
+            } else {
+                console.warn("対象のメッセージが見つかりませんでした (ID不一致)。");
             }
         }
     });
