@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}業者ダッシュボード{% endblock %}
 
@@ -17,7 +18,7 @@
     <div class="col-12">
         <div class="card shadow">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0">紐づく会員情報 (契約者) 一覧</h5>
+                <h5 class="mb-0">会員情報 (全契約者) 一覧</h5>
             </div>
             <div class="card-body p-0">
                 {% if contractors %}
@@ -29,7 +30,11 @@
                                 <th>物件名</th>
                                 <th>電話番号</th>
                                 <th>Email</th>
-                                <th>支払</th>
+                                <th>支払開始</th>
+                                <th>入居日</th>
+                                <th>入居月数</th>
+                                <th>途中解約</th>
+                                <th>退去保証金</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -45,6 +50,15 @@
                                     {% else %}
                                     <span class="text-danger fw-bold" title="未払い">❌</span>
                                     {% endif %}
+                                <td>{{ contractor.move_in_date }}</td>
+                                <td>{{ contractor.months }}か月</td>
+                                <td class="text-center">
+                                    {% if contractor.is_cancel %}
+                                    <span class="text-success fw-bold" title="解約済み">❌</span>
+                                    {% else %}
+                                    <span class="text-danger fw-bold" title="未解約"></span>
+                                    {% endif %}
+                                <td>{{ contractor.assurance_price|floatformat:0|intcomma }}円</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -64,7 +78,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm bg-success-subtle h-100">
             <div class="card-body">
-                <h5 class="card-title">ユーザー情報</h5>
+                <h5 class="card-title"></h5>
                 </div>
         </div>
     </div>
@@ -72,7 +86,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm h-100">
             <div class="card-body">
-                <h5 class="card-title">契約者管理タスク</h5>
+                <h5 class="card-title"></h5>
                 </div>
         </div>
     </div>

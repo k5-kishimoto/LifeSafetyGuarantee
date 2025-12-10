@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # --- ここから追加 ---
     'django.contrib.sites', # 💡 追加 💡
+    'django.contrib.humanize',
     'widget_tweaks',
     'accounts',
     'suppliers',
