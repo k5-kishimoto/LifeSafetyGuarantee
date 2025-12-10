@@ -156,7 +156,7 @@ def get_salesforce_webpush_subscriptions(username):
         # 2. そのユーザーに紐づくサブスクリプションを取得
         # (Contractor__c が参照項目である前提)
         soql_sub = (
-            f"SELECT Endpoint__c, P256dh__c, Auth__c "
+            f"SELECT EndpointUrl__c, P256dh__c, Auth__c "
             f"FROM GuaranteeWebNotification__c "
             f"WHERE Contractor__c = '{user_id}'"
         )
@@ -222,9 +222,9 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
         p256dh = keys.get('p256dh')
         auth = keys.get('auth')
 
-        # 2. ユーザーに紐づく既存の購読をすべて取得 (Endpoint__cで絞り込まない)
+        # 2. ユーザーに紐づく既存の購読をすべて取得 (EndpointUrl__cで絞り込まない)
         # 💡 ここで長いEndpointをWHERE句に使わないのがポイント 💡
-        soql_check = f"SELECT Id, Endpoint__c FROM GuaranteeWebNotification__c WHERE Contractor__c = '{user_id}'"
+        soql_check = f"SELECT Id, EndpointUrl__c FROM GuaranteeWebNotification__c WHERE Contractor__c = '{user_id}'"
         
         res_check = requests.get(query_url, headers=headers, params={'q': soql_check})
         res_check.raise_for_status() # エラーチェック
@@ -236,14 +236,14 @@ def add_salesforce_webpush_subscription(username, subscription_data, user_agent)
         if data_check['totalSize'] > 0:
             for record in data_check['records']:
                 # DBの値と、今回送られてきた値を比較
-                if record.get('Endpoint__c') == new_endpoint:
+                if record.get('EndpointUrl__c') == new_endpoint:
                     existing_record_id = record['Id']
                     break
 
         # 保存用ペイロード
         payload = {
             "Contractor__c": user_id,
-            "Endpoint__c": new_endpoint,
+            "EndpointUrl__c": new_endpoint,
             "P256dh__c": p256dh,
             "Auth__c": auth,
             "UserAgent__c": user_agent[:255] if user_agent else "Unknown"
