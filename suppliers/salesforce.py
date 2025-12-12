@@ -100,7 +100,7 @@ def get_contractors_for_agency(agency_username):
         # 2. 取得したAgency IDを使って、紐づくContractorを取得 (Supplier__cでフィルタ)
         # 💡 表示したいフィールドを SOQL で指定します 💡
         soql_contractors = (
-            f"SELECT Name, Fullname__c, PropertyName__c, RoomName__c, Telephone__c, MoveInDate__c, PaymentStart__c, IsMovedOut__c, MovedOutDate__c, IsCancel__c, AssurancePrice__c, CumulativeOccupancyMonths__c "
+            f"SELECT Name, Fullname__c, PropertyName__c, RoomName__c, Telephone__c, MoveInDate__c, PaymentStart__c, IsMovedOut__c, MovedOutDate__c, IsCancel__c, AssurancePrice__c, CumulativeOccupancyMonths__c, PayingStatus__c "
             f"FROM LeavingGuaranteeContractor__c "
             f"WHERE Supplier__c = '{agency_id}' AND IsAssurancePaying__c = False "
             f"ORDER BY RoomName__c, PropertyName__c DESC"
@@ -126,6 +126,7 @@ def get_contractors_for_agency(agency_username):
                 'is_cancel': record.get('IsCancel__c'),
                 'months': record.get('CumulativeOccupancyMonths__c'),
                 'assurance_price': record.get('AssurancePrice__c'),
+                'paying_status': record.get('PayingStatus__c'),
             })
             
         return contractors
