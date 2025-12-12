@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}アカウント登録{% endblock %}
+
+{% block content %}
+
+<div class="modal fade" id="signupGuideModal" tabindex="-1" aria-labelledby="guideModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="guideModalLabel">🔰 アカウント登録の流れ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead">当サービスをご利用いただきありがとうございます。</p>
+                <p>登録は以下の3ステップで完了します。</p>
+                
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body">
+                        <ol class="mb-0 fw-bold">
+                            <li class="mb-2">この画面で基本情報を入力して「アカウント作成」を押す</li>
+                            <li class="mb-2">ホーム画面にログインされます</li>
+                            <li>「入居者サービスを申し込む」ボタンから決済情報を登録する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <p class="small text-muted mb-0">
+                    ※ 既にアカウントをお持ちの方は <a href="{% url 'login' %}">ログイン</a> してください。<br>
+                    ※ お困りの際はサポートセンターまでお問い合わせください。
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">理解しました</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // フォームにエラーがある場合（入力ミスでの再表示時）は、モーダルを出さないようにする判定
+        // Djangoテンプレートタグを使って判定します
+            // Bootstrapのモーダル要素を取得
+            var modalElement = document.getElementById('signupGuideModal');
+            
+            if (modalElement) {
+                // モーダルを初期化して表示
+                var myModal = new bootstrap.Modal(modalElement, {
+                    backdrop: 'static', // 背景クリックで閉じないようにする (任意)
+                    keyboard: false     // ESCキーで閉じないようにする (任意)
+                });
+                myModal.show();
+            }
+    });
+</script>

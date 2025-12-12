@@ -10,7 +10,7 @@ class AgencySignUpForm(forms.Form):
     password2 = forms.CharField(label='パスワード（確認用）', widget=PasswordInput, required=True)
     
     # 💡 業者名表示用フィールド (SalesforceのAgencyName__cに相当する情報など)
-    agency_name = forms.CharField(label='取扱会社名', max_length=100, required=True) 
+    agency_name = forms.CharField(label='不動産管理会社名', max_length=100, required=True) 
 
     def clean(self):
         """パスワードの一致チェック"""

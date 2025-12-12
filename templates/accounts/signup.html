@@ -66,23 +66,101 @@
                 <p class="mb-0">アカウントをお持ちですか？ <a href="{% url 'login' %}">ログインはこちら</a></p>
             </div>
         </div>
-
     </div>
 </div>
+<div class="modal fade" id="signupGuideModal" tabindex="-1" aria-labelledby="guideModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="guideModalLabel">🔰 「退去費用保証」のご案内</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead">賃貸物件へ入居申込をされるお客様へ</p>
+                
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body">
+                        <pre>
+退去後にかかる原状回復費用を、入居者さまに代わって、
+保証会社：ライフコーポレーションが
+賃貸管理会社様へお支払い。
+
+◆入居者さまの退去後の請求ストレス・心配が軽減されます♪
+◆退去後の事務やりとりがスムーズ進みます♪
+
+入居者さま・家主さま・管理会社
+それぞれに安心とスムーズさをご提供！
+それが「退去費用保証」です。
+                        </pre>
+                        <img src="/static/img/detail.png" class="img-fluid"/>
+                    </div>
+                </div>
+
+                <p class="small text-muted mb-0">
+                    ※ 既にアカウントをお持ちの方は <a href="{% url 'login' %}">ログイン</a> してください。<br>
+                    ※ お困りの際はサポートセンターまでお問い合わせください。
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">理解しました</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ---------------------------------------------------------
+        // 1. Djangoの値を「文字列」として安全に受け取る
+        // ---------------------------------------------------------
+        // ダブルクォートで囲むことで、万が一値が空でも "" となりエラーになりません
+        var isBoundStr = "{{ form.is_bound|yesno:'true,false' }}";
+        
+        // 文字列の "true" を JavaScriptの boolean (true/false) に変換
+        var isBound = (isBoundStr === 'true');
+
+        console.log("フォーム送信済み状態(文字列):", isBoundStr);
+        console.log("判定結果:", isBound);
+
+        // ---------------------------------------------------------
+        // 2. まだ送信されていない(初回表示)場合のみ実行
+        // ---------------------------------------------------------
+        if (!isBound) {
+            var modalElement = document.getElementById('signupGuideModal');
+            
+            // Bootstrapチェック
+            if (typeof bootstrap !== 'undefined') {
+                if (modalElement) {
+                    try {
+                        var myModal = new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        myModal.show();
+                        console.log("モーダルを表示しました");
+                    } catch (e) {
+                        console.error("モーダル表示エラー:", e);
+                    }
+                }
+            } else {
+                console.error("Bootstrap JS未検出");
+            }
+        }
+    });
+
+    // ---------------------------------------------------------
+    // ボタン2重押し防止
+    // ---------------------------------------------------------
     (function() {
-        const form = document.getElementById('signupForm');
-        const button = document.getElementById('submitButton');
+        var form = document.getElementById('signupForm');
+        var button = document.getElementById('submitButton');
 
         if (form && button) {
             form.addEventListener('submit', function(event) {
-                // 1. ボタンを無効化する (これで2回目が押せなくなります)
-                button.disabled = true;
-
-                // 2. ボタンのテキストを変更して、処理中であることを伝える (Bootstrapのスピナーを使用)
-                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
-                
-                // 3. フォームの送信はそのまま続行されます
+                // 送信直後にボタンを無効化
+                setTimeout(function() {
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
+                }, 10);
             });
         }
     })();

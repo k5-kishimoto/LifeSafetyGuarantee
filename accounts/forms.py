@@ -35,7 +35,7 @@ class CustomUserCreationForm(UserCreationForm):
     # 💡 選択リスト 💡
     # 💡 選択リストのフィールドはそのまま定義 💡
     contractor_name = forms.ChoiceField(
-        label='業者名',
+        label='不動産管理会社',
         # choices は __init__ で設定するため、ここでは空欄でOK
         required=True,
         widget=forms.Select(attrs={'class': 'form-select'})
