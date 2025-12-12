@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}業者サインアップ{% endblock %}
+{% block title %}不動産管理会社サインアップ{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card shadow-lg mt-5">
             <div class="card-header bg-success text-white text-center">
-                <h4 class="mb-0">新規業者アカウント登録 ⚙️</h4>
+                <h4 class="mb-0">新規不動産管理会社アカウント登録 ⚙️</h4>
             </div>
             <div class="card-body p-4">
                 <h5 class="card-title text-center mb-4">Salesforceレコードを作成します</h5>
@@ -17,7 +17,7 @@
                     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
 
-                <form method="post" id="signupForm" action="{% url 'suppliers:signup' %}" onsubmit="return confirm('入力情報は正しいですか？');">
+                <form method="post" id="signupForm" action="{% url 'suppliers:signup' %}" onsubmit="return">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}

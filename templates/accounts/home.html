@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block title %}会員ダッシュボード{% endblock %}
+{% block title %}Ｔ保証会員さまダッシュボード{% endblock %}
 
 {% block content %}
 <div class="row mt-3">
@@ -33,7 +33,7 @@
                 {% if user.is_authenticated %}
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>ユーザー名 (ログインID)</strong>
+                        <strong>ユーザー名 (メールアドレス)</strong>
                         <span>{{ user.username }}</span>
                     </li>
                     {% if contractor_info %}

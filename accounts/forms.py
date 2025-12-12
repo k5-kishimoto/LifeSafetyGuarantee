@@ -16,6 +16,7 @@ class CustomUserCreationForm(UserCreationForm):
     # ユーザー名とパスワード
     username = forms.EmailField(
         label='ユーザー名（メールアドレス）', 
+        help_text='メールアドレスを入力してください。',
         max_length=150, 
         required=True,
         # HTML5のメール入力フォームを使用（スマホで入力しやすくなります）
@@ -27,8 +28,8 @@ class CustomUserCreationForm(UserCreationForm):
             'max_length': 'メールアドレスは150文字以内で入力してください。',
         }
     )
-    last_name = forms.CharField(label='姓', max_length=50, required=True)
-    first_name = forms.CharField(label='名', max_length=50, required=True)
+    last_name = forms.CharField(label='姓', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
+    first_name = forms.CharField(label='名', max_length=50, required=True, error_messages={'required': '名は必須です。',})
     password1 = forms.CharField(label='パスワード', widget=PasswordInput, strip=False)
     password2 = forms.CharField(label='パスワード（確認用）', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
     
@@ -54,14 +55,15 @@ class CustomUserCreationForm(UserCreationForm):
     birthday = forms.DateField(
         label='生年月日',
         required=False,
+        error_messages={'required': '生年月日は必須です。',},
         widget=forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d') 
     )
 
     # 💡 カスタム項目 💡
-    property_name = forms.CharField(label='物件名', max_length=100, required=True)
-    room_name = forms.CharField(label='部屋番号', max_length=50, required=True)
-    telephone = forms.CharField(label='電話番号', max_length=15, help_text='ハイフンなしで入力してください', required=True)
-    address = forms.CharField(label='住所', widget=forms.Textarea(attrs={'rows': 3}), required=True)
+    property_name = forms.CharField(label='物件名', max_length=100, required=True, error_messages={'required': '物件名は必須です。',})
+    room_name = forms.CharField(label='部屋番号', max_length=50, required=True, error_messages={'required': '部屋番号は必須です。',})
+    telephone = forms.CharField(label='電話番号', max_length=15, help_text='ハイフンなしで入力してください', required=True, error_messages={'required': '電話番号は必須です。',})
+    address = forms.CharField(label='住所', widget=forms.Textarea(attrs={'rows': 3}), required=True, error_messages={'required': '住所は必須です。',})
 
     class Meta:
         model = User
@@ -76,7 +78,7 @@ class CustomUserCreationForm(UserCreationForm):
             'telephone', 
             'address'
         ) 
-        labels = {'username': 'ユーザー名'}
+        labels = {'username': 'ユーザー名（メールアドレス）'}
 
 from django import forms
 from django_summernote.widgets import SummernoteWidget # インポート
