@@ -92,7 +92,13 @@
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
                 <div class="mb-3 mb-md-0 text-center text-md-start">
                     <h2 class="fw-bold mb-1">Welcome back!</h2>
-                    <p class="mb-0 opacity-75 fs-5">{{ user.username }} 様、こんにちは 👋</p>
+                    <p class="mb-0 opacity-75 fs-5">
+                        {% if contractor_info %}
+                            {{ contractor_info.last_name }} {{ contractor_info.first_name }} 様、こんにちは 👋
+                        {% else %}
+                            {{ user.username }} 様、こんにちは 👋
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="text-center text-md-end">
                     <button id="enable-notifications-btn" class="btn btn-glass btn-lg px-4 rounded-pill">

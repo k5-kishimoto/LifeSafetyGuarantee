@@ -17,9 +17,19 @@
 <div class="row mb-5">
     <div class="col-12">
         <div class="card shadow">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">会員情報 (全契約者) 一覧</h5>
             </div>
+            
+            <div class="p-3 bg-light border-bottom">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0">
+                        🔍
+                    </span>
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="キーワードで絞り込み (氏名, 物件名, '未払い' など)">
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 {% if contractors %}
                 <div class="table-responsive">
@@ -52,6 +62,7 @@
                                     <span class="d-none">1</span>
                                     {% else %}
                                     <span class="text-danger fw-bold" title="未払い">❌</span>
+                                    <span class="d-none">未払い</span>
                                     <span class="d-none">0</span>
                                     {% endif %}
                                 </td>
@@ -63,13 +74,23 @@
                                 <td class="text-center">
                                     {% if contractor.is_cancel %}
                                     <span class="text-success fw-bold" title="解約済み">❌</span>
-                                    <span class="d-none">1</span>
+                                    <span class="d-none">解約済み</span> <span class="d-none">1</span>
                                     {% else %}
                                     <span class="text-danger fw-bold" title="未解約"></span>
                                     <span class="d-none">0</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ contractor.move_out_date|default_if_none:"" }}</td>
+                                <td data-value="{{ contractor.move_out_date|default_if_none:'' }}">
+                                    {% if contractor.move_out_date %}
+                                        <span class="badge bg-danger">退去</span>
+                                        
+                                        <span class="ms-1 small text-dark fw-bold">
+                                            {{ contractor.move_out_date }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
                                 <td data-value="{{ contractor.assurance_price|default_if_none:'0' }}">
                                     {{ contractor.assurance_price|floatformat:0|intcomma }}円
                                 </td>
@@ -88,22 +109,13 @@
     </div>
 </div>
 
-<div class="row">
-    </div>
-
 <style>
-    th.sortable {
-        cursor: pointer;
-        position: relative;
-    }
-    th.sortable:hover {
-        background-color: #f1f1f1;
-    }
-    .sort-icon {
-        font-size: 0.8em;
-        margin-left: 5px;
-        color: #ccc;
-    }
+    th.sortable { cursor: pointer; position: relative; }
+    th.sortable:hover { background-color: #f1f1f1; }
+    .sort-icon { font-size: 0.8em; margin-left: 5px; color: #ccc; }
+    /* 検索ボックスのフォーカス時のスタイル調整 */
+    #searchInput:focus { box-shadow: none; border-color: #ced4da; }
+    .input-group:focus-within { box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25); border-radius: 0.375rem; }
 </style>
 
 <script>
@@ -111,33 +123,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const table = document.getElementById('sortableTable');
     if (!table) return;
 
+    // ==========================================
+    // 🔍 2. フィルター機能の追加
+    // ==========================================
+    const searchInput = document.getElementById('searchInput');
+    
+    searchInput.addEventListener('keyup', function() {
+        const searchText = searchInput.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            // その行のすべてのテキストを取得して小文字に変換
+            const rowText = row.innerText.toLowerCase();
+            
+            // 検索ワードが含まれていれば表示、なければ非表示
+            if (rowText.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // ==========================================
+    // 🔃 ソート機能 (既存のコード)
+    // ==========================================
     const headers = table.querySelectorAll('th.sortable');
     const tableBody = table.querySelector('tbody');
-    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    // 注意: sortするときは「現在のDOM」から取得する必要があるため、
+    // const rows = ... と固定するのではなく、イベント内で取得するように少し書き換えます
 
     headers.forEach((header, index) => {
         header.addEventListener('click', () => {
             const currentIsAscending = header.classList.contains('asc');
             const direction = currentIsAscending ? -1 : 1;
 
-            // 全てのヘッダーのクラスをリセット
             headers.forEach(h => {
                 h.classList.remove('asc', 'desc');
                 h.querySelector('.sort-icon').textContent = '⇅';
                 h.querySelector('.sort-icon').style.color = '#ccc';
             });
 
-            // 現在のヘッダーにクラスとアイコンを設定
             header.classList.add(currentIsAscending ? 'desc' : 'asc');
             header.querySelector('.sort-icon').textContent = currentIsAscending ? '↓' : '↑';
             header.querySelector('.sort-icon').style.color = '#333';
 
-            // ソート実行
-            const sortedRows = rows.sort((a, b) => {
+            // 常に最新の行リストを取得してソート
+            const currentRows = Array.from(tableBody.querySelectorAll('tr'));
+
+            const sortedRows = currentRows.sort((a, b) => {
                 const aCol = a.querySelectorAll('td')[index];
                 const bCol = b.querySelectorAll('td')[index];
 
-                // data-value属性があればそれを数値として使う (金額や月数用)
                 let aValue = aCol.getAttribute('data-value');
                 let bValue = bCol.getAttribute('data-value');
 
@@ -145,20 +182,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return (parseFloat(aValue) - parseFloat(bValue)) * direction;
                 }
 
-                // テキスト比較
                 const aText = aCol.innerText.trim();
                 const bText = bCol.innerText.trim();
 
-                // 日付判定 (YYYY-MM-DD形式などを想定)
                 if (!isNaN(Date.parse(aText)) && !isNaN(Date.parse(bText)) && aText.includes('-')) {
                     return (new Date(aText) - new Date(bText)) * direction;
                 }
 
-                // 文字列比較
                 return aText.localeCompare(bText, 'ja') * direction;
             });
 
-            // テーブルを再構築
             while (tableBody.firstChild) {
                 tableBody.removeChild(tableBody.firstChild);
             }

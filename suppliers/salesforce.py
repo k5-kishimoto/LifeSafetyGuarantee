@@ -83,7 +83,6 @@ def get_contractors_for_agency(agency_username):
     query_url = f"{instance_url}/services/data/{api_version}/query"
 
     try:
-        print(f"業者名:{agency_username}")
         # 1. AgencyのNameからSalesforce IDを取得
         soql_agency = f"SELECT Id FROM EvictionGuaranteeAgency__c WHERE Username__c = '{agency_username}' LIMIT 1"
         response_agency = requests.get(query_url, headers=headers, params={'q': soql_agency})
@@ -96,7 +95,6 @@ def get_contractors_for_agency(agency_username):
         
         agency_id = data_agency['records'][0]['Id']
 
-        print(f"業者ID:{agency_id}")
         # 2. 取得したAgency IDを使って、紐づくContractorを取得 (Supplier__cでフィルタ)
         # 💡 表示したいフィールドを SOQL で指定します 💡
         soql_contractors = (

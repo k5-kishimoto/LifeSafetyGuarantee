@@ -10,6 +10,9 @@ User = get_user_model()
 
 class SalesforceBackend(BaseBackend):
     
+    #*****************************************************
+    # 会員サイト認証用
+    #*****************************************************
     def authenticate(self, request, username=None, password=None, **kwargs):
         """LeavingGuaranteeContractor__c のレコードとパスワードを検証し、権限を同期する"""
         
@@ -25,7 +28,7 @@ class SalesforceBackend(BaseBackend):
         # 💡 1. SOQLクエリに IsAdmin__c を追加 💡
         soql_query = (
             f"SELECT Id, IsAdmin__c FROM LeavingGuaranteeContractor__c "
-            f"WHERE Name = '{username}' AND Password__c = '{hashed_password}' LIMIT 1"
+            f"WHERE Name = '{username}' AND Password__c = '{hashed_password}' IsMovedOut__c = False LIMIT 1"
         )
         
         query_url = f"{instance_url}/services/data/{api_version}/query"
