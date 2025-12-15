@@ -1,24 +1,108 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}ログイン{% endblock %}
+{% block title %}ログイン｜Ｔ保証{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-5">
+<style>
+    /* カードデザイン */
+    .login-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    /* ヘッダーグラデーション */
+    .login-header {
+        background: linear-gradient(135deg, #0d253f 0%, #1e3c72 100%);
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+
+    /* 入力フォーム周り */
+    .form-control {
+        border-radius: 0 8px 8px 0;
+        padding: 0.8rem 1rem;
+        border: 1px solid #dee2e6;
+        border-left: none; /* 左の線はinput-group-textに任せる */
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #86b7fe;
+    }
+    /* 入力欄のアイコン部分 */
+    .input-group-text {
+        border-radius: 8px 0 0 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-right: none;
+        color: #6c757d;
+        width: 50px;
+        justify-content: center;
+    }
+    /* フォーカス時にアイコンと枠線を連動して青くする */
+    .input-group:focus-within .input-group-text {
+        border-color: #86b7fe;
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+    .input-group:focus-within .form-control {
+        border-color: #86b7fe;
+    }
+
+    /* ログインボタン */
+    .btn-login {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%); /* 安心感のあるグリーン */
+        border: none;
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        color: #fff;
+    }
+
+    /* リンク */
+    .link-muted {
+        color: #6c757d;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .link-muted:hover {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-5 col-xl-4">
         
-        <div class="card shadow-lg border-0 mt-5 mb-4">
-            <div class="card-header bg-success text-white text-center">
-                <h3 class="mb-0">Ｔ保証会員さまログイン 🔑</h3>
+        <div class="card login-card mb-4">
+            <div class="login-header">
+                <div class="mb-2">
+                    <i class="bi bi-shield-lock-fill" style="font-size: 3rem; opacity: 0.9;"></i>
+                </div>
+                <h3 class="mb-0 fw-bold">Member Login</h3>
+                <p class="mb-0 small opacity-75">Ｔ保証会員さまサイトへようこそ</p>
             </div>
             
-            <div class="card-body p-4 p-md-5">
+            <div class="card-body p-4 p-md-5 bg-white">
 
-                <h5 class="card-title text-center mb-4">アカウントにアクセス</h5>
-                
                 {% if form.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        ユーザー名またはパスワードが正しくありません。
+                    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center mb-4 rounded-3" role="alert">
+                        <i class="bi bi-exclamation-circle-fill fs-4 me-3 text-danger"></i>
+                        <div>
+                            <div class="fw-bold">ログインできません</div>
+                            <small>ユーザー名またはパスワードを確認してください。</small>
+                        </div>
                     </div>
                 {% endif %}
 
@@ -26,20 +110,32 @@
                     {% csrf_token %}
                     
                     {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label text-muted small fw-bold ms-1">
                                 {{ field.label }}
                             </label>
-                            {{ field|add_class:"form-control" }}
-
-                            {% for error in field.errors %}
-                                <div class="text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    {% if 'password' in field.name %}
+                                        <i class="bi bi-key-fill fs-5"></i>
+                                    {% else %}
+                                        <i class="bi bi-person-fill fs-5"></i>
+                                    {% endif %}
+                                </span>
+                                {{ field|add_class:"form-control" }}
+                            </div>
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1 ms-1">
+                                    {{ field.errors.0 }}
+                                </div>
+                            {% endif %}
                         </div>
                     {% endfor %}
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-success btn-lg">ログイン</button>
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-primary btn-login btn-lg text-white">
+                            ログイン <i class="bi bi-box-arrow-in-right ms-2"></i>
+                        </button>
                     </div>
                     
                     {% if next %}
@@ -49,12 +145,24 @@
 
             </div>
             
-            <div class="card-footer text-center py-3">
-                <p class="mb-2">
-                    <a href="{% url 'password_reset' %}" class="small">パスワードをお忘れですか？</a>
-                </p>
-                <p class="mb-0">アカウントをお持ちでない方は <a href="{% url 'signup' %}">サインアップ</a> してください。</p>
+            <div class="card-footer bg-light text-center py-3 border-top-0">
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'password_reset' %}" class="link-muted small">
+                        <i class="bi bi-question-circle me-1"></i>パスワードをお忘れですか？
+                    </a>
+                    <hr class="my-2 opacity-50">
+                    <div class="small">
+                        アカウントをお持ちでない方は
+                        <a href="{% url 'signup' %}" class="fw-bold text-decoration-none ms-1 text-primary">
+                            サインアップ <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <div class="text-center text-muted small opacity-50">
+            &copy; 2024 T-Guarantee Member Portal
         </div>
 
     </div>

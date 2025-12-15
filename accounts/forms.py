@@ -54,7 +54,7 @@ class CustomUserCreationForm(UserCreationForm):
     # 💡 日付型 💡
     birthday = forms.DateField(
         label='生年月日',
-        required=False,
+        required=True,
         error_messages={'required': '生年月日は必須です。',},
         widget=forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d') 
     )

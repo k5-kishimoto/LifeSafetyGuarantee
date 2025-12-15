@@ -1,31 +1,106 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
 
-{% block title %}入居者さま届出{% endblock %}
+{% block title %}入居者さま届出｜Ｔ保証{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+<style>
+    body {
+        background-color: #f8f9fa; /* 全体の背景を少しグレーに */
+    }
+    .bukken-card {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb); /* 物件情報の背景グラデーション */
+        border: none;
+        border-left: 5px solid #2196f3;
+    }
+    .form-card {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* 柔らかい影 */
+        border-radius: 16px; /* 角丸を強調 */
+        overflow: hidden;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #4e73df, #224abe); /* ヘッダーのグラデーション */
+        padding: 1.5rem;
+    }
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ced4da;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.25); /* フォーカス時の光彩 */
+        border-color: #4e73df;
+    }
+    /* プレースホルダー（入力例）の色を薄くする */
+    .form-control::placeholder {
+        color: #cecece;       /* 薄いグレー */
+        font-weight: 300;     /* 文字を細くする */
+        opacity: 1;           /* Firefox用のおまじない */
+    }
+    .btn-gradient {
+        background: linear-gradient(135deg, #4e73df, #224abe);
+        border: none;
+        font-weight: 600;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
+        transition: all 0.3s;
+    }
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(78, 115, 223, 0.5);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 0.5rem;
+    }
+    .guide-modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    .guide-modal-header {
+        background: linear-gradient(135deg, #1cc88a, #13855c);
+        color: white;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        padding: 1.5rem;
+    }
+</style>
+
+<div class="row justify-content-center my-5">
+    <div class="col-md-10 col-lg-8 col-xl-6">
         
         {% if bukken_name %}
-        <div class="alert alert-info text-center shadow-sm" role="alert">
-            <h4 class="mb-0">
-                **{{ bukken_name }}** へようこそ！
-            </h4>
-            {% if gyousya_id %}
-            <p class="small mt-1 mb-0 text-muted">関連業者ID: {{ gyousya_id }}</p>
-            {% endif %}
+        <div class="card bukken-card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="text-primary fw-bold mb-2">
+                    <i class="bi bi-building-check me-2"></i>対象物件
+                </h5>
+                <h3 class="mb-2 fw-bold text-dark">{{ bukken_name }}</h3>
+                {% if gyousya_id %}
+                <div class="d-flex align-items-center text-muted">
+                    <i class="bi bi-briefcase me-2"></i>
+                    <span>関連業者ID: <span class="badge bg-primary bg-opacity-25 text-primary ms-1 px-3 py-1 rounded-pill">{{ gyousya_id }}</span></span>
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
         
-        <div class="card shadow-lg border-0 mb-4">
-            <div class="card-header bg-primary text-white text-center">
-                <h3 class="mb-0">入居者さま届出 📝</h3>
+        <div class="card form-card mb-4">
+            <div class="card-header form-header text-white text-center">
+                <h3 class="mb-0 fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i>入居者さま届出
+                </h3>
+                <p class="mb-0 mt-2 opacity-75">アカウント情報をご入力ください</p>
             </div>
             
-            <div class="card-body p-4 p-md-5">
-
-                <h5 class="card-title text-center text-muted mb-4">アカウント情報をご入力ください</h5>
+            <div class="card-body p-4 p-md-5 bg-white">
 
                 <form method="post" id="signupForm" onsubmit="return">
                     {% csrf_token %}
@@ -35,73 +110,114 @@
                     {% endif %}
 
                     {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
+                        <div class="alert alert-danger shadow-sm border-0 rounded-3 d-flex align-items-center" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
                         </div>
                     {% endif %}
                     
                     {% for field in form %}
-                        <div class="mb-3">
-                            {{ field.label_tag }}
-                            {{ field|add_class:"form-control" }}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="badge bg-danger ms-2 p-1">必須</span>{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    {% if 'email' in field.name %}<i class="bi bi-envelope"></i>
+                                    {% elif 'password' in field.name %}<i class="bi bi-key"></i>
+                                    {% else %}<i class="bi bi-pencil"></i>{% endif %}
+                                </span>
+                                {{ field|add_class:"form-control border-start-0" }}
+                            </div>
 
                             {% for error in field.errors %}
-                                <div class="text-danger small mt-1">{{ error }}</div>
+                                <div class="text-danger small mt-2 d-flex align-items-center">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                </div>
                             {% endfor %}
                             {% if field.help_text %}
-                                <div class="form-text">{{ field.help_text }}</div>
+                                <div class="form-text text-muted mt-1 ms-1">{{ field.help_text }}</div>
                             {% endif %}
                         </div>
                     {% endfor %}
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submitButton">アカウントを作成し、入居者登録を完了する</button>
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary btn-gradient btn-lg" id="submitButton">
+                            <i class="bi bi-check-circle-fill me-2"></i>同意してアカウントを作成する
+                        </button>
+                        <p class="text-center text-muted small mt-2 mb-0">
+                            ※ <a href="#" target="_blank" class="text-decoration-none">利用規約</a> と <a href="#" target="_blank" class="text-decoration-none">プライバシーポリシー</a> に同意の上、作成してください。
+                        </p>
                     </div>
                 </form>
             </div>
             
-            <div class="card-footer text-center py-3">
-                <p class="mb-0">アカウントをお持ちですか？ <a href="{% url 'login' %}">ログインはこちら</a></p>
+            <div class="card-footer text-center py-4 bg-light border-top-0">
+                <p class="mb-0">既にアカウントをお持ちですか？ 
+                    <a href="{% url 'login' %}" class="fw-bold text-decoration-none ms-1">
+                        ログインはこちら <i class="bi bi-arrow-right-circle-fill"></i>
+                    </a>
+                </p>
             </div>
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="signupGuideModal" tabindex="-1" aria-labelledby="guideModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="guideModalLabel">🔰 「退去費用保証」のご案内</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg"> 
+        <div class="modal-content guide-modal-content">
+            <div class="modal-header guide-modal-header">
+                <h4 class="modal-title fw-bold" id="guideModalLabel">
+                    <i class="bi bi-info-circle-fill me-2"></i>「退去費用保証」のご案内
+                </h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <p class="lead">賃貸物件へ入居申込をされるお客様へ</p>
+            <div class="modal-body p-4 p-lg-5 bg-light">
+                <div class="text-center mb-4">
+                    <h5 class="fw-bold text-dark">賃貸物件へ入居申込をされるお客様へ</h5>
+                    <p class="text-muted">当サービスをご利用いただきありがとうございます。</p>
+                </div>
                 
-                <div class="card bg-light border-0 mb-3">
-                    <div class="card-body">
-                        <pre>
-退去後にかかる原状回復費用を、入居者さまに代わって、
-保証会社：ライフコーポレーションが
-賃貸管理会社様へお支払い。
-
-◆入居者さまの退去後の請求ストレス・心配が軽減されます♪
-◆退去後の事務やりとりがスムーズ進みます♪
-
-入居者さま・家主さま・管理会社
-それぞれに安心とスムーズさをご提供！
-それが「退去費用保証」です。
-                        </pre>
-                        <img src="/static/img/detail.png" class="img-fluid"/>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 mb-4 mb-lg-0">
+                                <h6 class="fw-bold text-success mb-3"><i class="bi bi-check-square-fill me-2"></i>退去費用保証とは？</h6>
+                                <p class="lh-lg">
+                                    退去後にかかる原状回復費用を、入居者さまに代わって保証会社（ライフコーポレーション）が賃貸管理会社様へお支払いする仕組みです。
+                                </p>
+                                <ul class="list-unstyled mt-4">
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="bi bi-emoji-smile-fill text-warning fs-4 me-3"></i>
+                                        <span>退去後の急な費用請求の心配が軽減されます。</span>
+                                    </li>
+                                    <li class="d-flex align-items-start">
+                                        <i class="bi bi-hand-thumbs-up-fill text-primary fs-4 me-3"></i>
+                                        <span>退去時の事務手続きがスムーズに進みます。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-6 text-center">
+                                <img src="{% static 'img/detail.png' %}" class="img-fluid rounded-3 shadow-sm" alt="退去費用保証のイメージ"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <p class="small text-muted mb-0">
-                    ※ 既にアカウントをお持ちの方は <a href="{% url 'login' %}">ログイン</a> してください。<br>
+                <p class="small text-muted text-center mb-0">
+                    ※ 既にアカウントをお持ちの方は <a href="{% url 'login' %}" class="text-decoration-none">ログイン</a> してください。<br>
                     ※ お困りの際はサポートセンターまでお問い合わせください。
                 </p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">理解しました</button>
+            <div class="modal-footer bg-white p-3 border-top-0 justify-content-center">
+                <button type="button" class="btn btn-success btn-gradient px-5 py-3 fs-5" data-bs-dismiss="modal">
+                    <i class="bi bi-check-lg me-2"></i>内容を理解しました
+                </button>
             </div>
         </div>
     </div>

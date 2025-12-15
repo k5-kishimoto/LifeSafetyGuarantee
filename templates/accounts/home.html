@@ -2,129 +2,252 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block title %}Ｔ保証会員さまダッシュボード{% endblock %}
+{% block title %}マイページ｜Ｔ保証{% endblock %}
 
 {% block content %}
-<div class="row mt-3">
-    <div class="col-12 text-center">
-        <h2 class="display-6 text-primary mb-3">ようこそ、{{ user.username }}さん！ 👋</h2>
-        
-        <button id="enable-notifications-btn" class="btn btn-outline-primary btn-lg">
-            🔔 通知を受け取る設定にする
-        </button>
-        
-        <div class="mt-2">
-            <small class="text-muted">
-                iPhoneの方は、共有ボタン <i class="bi bi-box-arrow-up"></i> > [ホーム画面に追加] をしてから押してください
-            </small>
+<style>
+    /* ヒーローセクション（ウェルカムエリア） */
+    .hero-card {
+        background: linear-gradient(135deg, #0d253f 0%, #1e3c72 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(13, 37, 63, 0.2);
+    }
+    
+    /* アクションカード（右側） */
+    .action-card {
+        border: none;
+        border-radius: 16px;
+        transition: transform 0.3s;
+    }
+    .action-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* アイコンバッジ */
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    /* メッセージリスト */
+    .message-list-item {
+        border: none;
+        border-left: 4px solid transparent;
+        border-radius: 8px !important;
+        margin-bottom: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        transition: all 0.2s;
+    }
+    .message-list-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #0d6efd; /* ホバー時に青線を表示 */
+        transform: translateX(4px);
+    }
+    
+    /* ボタンスタイル */
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s;
+    }
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+
+    .rich-text-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* 長いURL等の折り返し */
+    .rich-text-content {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word; 
+    }
+    .rich-text-content a {
+        word-break: break-all;
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card hero-card p-4">
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                <div class="mb-3 mb-md-0 text-center text-md-start">
+                    <h2 class="fw-bold mb-1">Welcome back!</h2>
+                    <p class="mb-0 opacity-75 fs-5">{{ user.username }} 様、こんにちは 👋</p>
+                </div>
+                <div class="text-center text-md-end">
+                    <button id="enable-notifications-btn" class="btn btn-glass btn-lg px-4 rounded-pill">
+                        <i class="bi bi-bell-fill me-2"></i>通知を受け取る
+                    </button>
+                    <div class="mt-2 small text-white-50">
+                        <i class="bi bi-apple me-1"></i>
+                        iPhoneの方は、共有ボタン
+                        <img src="{% static 'img/sharebtn.png' %}" class="rounded-2 shadow-sm mx-1" alt="共有ボタン" style="height: 1.3em; width: auto; vertical-align: text-bottom;" />
+                        → [ホーム画面に追加] を押してください
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<hr>
-
 <div class="row">
-    <div class="col-lg-8 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">🔑 アカウント情報</h5>
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0 h-100 rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-person-vcard"></i>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-dark">会員情報</h5>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <div class="card-body px-4 pb-4">
                 {% if user.is_authenticated %}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>ユーザー名 (メールアドレス)</strong>
-                        <span>{{ user.username }}</span>
-                    </li>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-light">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="bi bi-person me-2"></i>ユーザー名</span>
+                        <span class="fw-medium text-dark">{{ user.username }}</span>
+                    </div>
+                    
                     {% if contractor_info %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>氏名</strong>
-                        <span>{{ contractor_info.last_name }} {{ contractor_info.first_name }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>お部屋情報</strong>
-                        <span>{{ contractor_info.property_name }} {{ contractor_info.room_name }}</span>
-                    </li>
+                    <div class="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-light">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="bi bi-card-text me-2"></i>契約者氏名</span>
+                        <span class="fw-medium text-dark">{{ contractor_info.last_name }} {{ contractor_info.first_name }}</span>
+                    </div>
+                    <div class="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center border-bottom border-light">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="bi bi-houses me-2"></i>物件名</span>
+                        <span class="fw-medium text-dark">{{ contractor_info.property_name }}</span>
+                    </div>
+                    <div class="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small text-uppercase fw-bold"><i class="bi bi-door-open me-2"></i>部屋番号</span>
+                        <span class="fw-medium text-dark badge bg-secondary bg-opacity-10 text-secondary px-3">{{ contractor_info.room_name }}</span>
+                    </div>
                     {% endif %}
-                </ul>
+                </div>
                 {% endif %}
             </div>
-            <div class="card-footer text-muted small">
-                最終ログイン: {{ user.last_login|default:"N/A"|date:"Y年m月d日 H:i" }}
+            <div class="card-footer bg-light border-0 text-muted small text-end py-2 px-4">
+                <i class="bi bi-clock-history me-1"></i>最終ログイン: {{ user.last_login|default:"N/A"|date:"Y/m/d H:i" }}
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4 mb-4">
-        <div class="card shadow-sm bg-warning-subtle h-100">
-            <div class="card-body d-flex flex-column justify-content-between">
-                <div>
-                    <h5 class="card-title">⚙️ アクションメニュー</h5>
-                    <p class="card-text text-muted small">アカウントの管理や設定変更が可能です。</p>
-                    
-                    {% if contractor_info.payment_start %}
-                        <div class="d-grid gap-2 mb-3">
-                            <a href="{% url 'manage_payment' %}" class="btn btn-primary">支払い方法の変更・管理</a>
-                            <!-- <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">パスワード変更</a> -->
-                        </div>
-                    {% else %}
-                        <div class="d-grid gap-2 mb-3">
-                            <a href="{% url 'create_checkout_session' %}" class="btn btn-warning btn-lg">
-                                入居者サービスを申し込む
-                            </a>
-                        </div>
-                    {% endif %}
+    <div class="col-lg-5 mb-4">
+        <div class="card action-card shadow-sm border-0 mb-3 bg-white">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-dark">アクション</h5>
                 </div>
 
                 {% if contractor_info.payment_start %}
-                <div class="mt-4 pt-3 border-top">
-                    <h5 class="card-title text-danger">⚠️ 退去する</h5>
-                    <p class="card-text small">サブスクリプションを即座にキャンセルします。</p>
-                    <div class="d-grid">
-                        <form action="{% url 'cancel_service' %}" method="post" onsubmit="return confirm('本当に退去しますか？この操作は元に戻せません。');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-block">退去する</button>
-                        </form>
+                    <div class="alert alert-success border-0 d-flex align-items-center mb-4 shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                        <div>
+                            <div class="fw-bold">契約中 (アクティブ)</div>
+                            <small>入居者サービスを利用中です。</small>
+                        </div>
                     </div>
-                </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'manage_payment' %}" class="btn btn-outline-primary py-2 rounded-3 border-2 fw-bold">
+                            <i class="bi bi-credit-card-2-front me-2"></i>支払い方法の確認
+                        </a>
+                        
+                        <div class="mt-3 pt-3 border-top">
+                            <p class="text-muted small mb-2"><i class="bi bi-exclamation-circle me-1"></i>退去が決まった場合</p>
+                            <form action="{% url 'cancel_service' %}" method="post" onsubmit="return confirm('【重要】\n本当に退去処理を行いますか？\nこの操作を実行するとサブスクリプションが即座に停止されます。');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger w-100 rounded-3 bg-opacity-10 text-danger border-0 fw-bold" style="background-color: rgba(220,53,69,0.1);">
+                                    <i class="bi bi-box-arrow-right me-2"></i>退去手続きへ進む
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="text-center py-2">
+                        <p class="text-muted small mb-3">サービスの利用開始には手続きが必要です</p>
+                        <a href="{% url 'create_checkout_session' %}" class="btn btn-warning w-100 py-3 rounded-3 shadow text-dark fw-bold position-relative overflow-hidden">
+                            <span class="position-relative z-1"><i class="bi bi-stars me-2"></i>入居者サービスを申し込む</span>
+                        </a>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
+<div class="row">
     <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">📬 お知らせボックス</h5>
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-mailbox"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">お知らせ</h5>
+                        <small class="text-muted">管理会社からのメッセージ</small>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <div class="card-body p-4 bg-light bg-opacity-50">
                 {% if messages_list %}
                     <div class="list-group">
                         {% for msg in messages_list %}
-                            <a href="#" class="list-group-item list-group-item-action message-item text-break"
-                            data-target-id="msg-content-{{ msg.Id }}" 
-                            data-subject="{{ msg.Subject__c }}"
-                            data-date="{{ msg.CreatedDate|slice:':10' }}"
-                            onclick="openMessageModal(this); return false;">
-                            
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1 fw-bold text-break">{{ msg.Subject__c }}</h6>
-                                    <small class="text-muted text-nowrap ms-2">{{ msg.CreatedDate|slice:":10" }}</small>
-                                </div>
+                            <button type="button" 
+                               class="list-group-item list-group-item-action message-list-item p-3"
+                               data-target-id="msg-content-{{ msg.Id }}" 
+                               data-subject="{{ msg.Subject__c }}"
+                               data-date="{{ msg.CreatedDate|slice:':10' }}"
+                               onclick="openMessageModal(this);">
                                 
-                                <p class="mb-1 text-truncate">{{ msg.Body__c|striptags }}</p>
-                            </a>
+                                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 70%;">
+                                        <i class="bi bi-envelope-paper me-2 text-primary"></i>{{ msg.Subject__c }}
+                                    </h6>
+                                    <small class="text-muted font-monospace bg-light px-2 rounded">{{ msg.CreatedDate|slice:":10" }}</small>
+                                </div>
+                                <p class="mb-0 text-muted small text-truncate ps-4 opacity-75">
+                                    {{ msg.Body__c|striptags }}
+                                </p>
+                            </button>
 
                             <div id="msg-content-{{ msg.Id }}" class="d-none">
                                 {{ msg.Body__c|safe }}
                             </div>
-
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted text-center py-3">現在、新しいメッセージはありません。</p>
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                        新しいお知らせはありません
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -132,50 +255,29 @@
 </div>
 
 <div class="modal fade" id="messageDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="modalSubject">メッセージ詳細</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="modalSubject">
+                    <i class="bi bi-chat-text-fill me-2"></i>メッセージ詳細
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-2 text-end text-muted small" id="modalDate"></div>
-                <hr>
-                <div id="modalBody" class="rich-text-content"></div>
+            <div class="modal-body p-4 bg-light">
+                <div class="d-flex justify-content-end mb-3">
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal px-3 py-2" id="modalDate"></span>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4" id="modalBody">
+                        </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">閉じる</button>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .rich-text-content img {
-        max-width: 100%;
-        height: auto;
-    }
-    /* モーダル内のコンテンツ用スタイル */
-    .rich-text-content {
-        /* 長い単語やURLがあっても枠内で強制的に折り返す */
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-        word-break: break-word; 
-    }
-
-    /* リンクタグに対してはさらに強力に折り返しを適用 */
-    .rich-text-content a {
-        word-break: break-all; /* リンクは文字単位で折り返す */
-        color: #0d6efd;
-        text-decoration: underline;
-    }
-
-    /* 画像が枠からはみ出ないようにする */
-    .rich-text-content img {
-        max-width: 100%;
-        height: auto;
-    }
-</style>
 
 <script>
     // ---------------------------------------------------------
@@ -261,20 +363,14 @@
     // 5. モーダルを開く共通関数 (ID参照版)
     // ---------------------------------------------------------
     function openMessageModal(element) {
-        // Bootstrapチェック
         if (typeof bootstrap === 'undefined') {
             alert('画面読み込みエラー: Bootstrapがロードされていません。');
             return;
         }
 
-        // 1. データ属性からタイトルと日付を取得
         const subject = element.getAttribute('data-subject');
         const date = element.getAttribute('data-date');
-        
-        // 2. 紐付いている本文データのIDを取得 (例: msg-content-a0W...)
         const targetId = element.getAttribute('data-target-id');
-        
-        // 3. IDを使って、リンクの外にある隠し要素を取得
         const bodyElement = document.getElementById(targetId);
         
         let bodyContent = '';
@@ -285,12 +381,13 @@
             bodyContent = '<p class="text-danger">本文データの取得に失敗しました。</p>';
         }
 
-        // 4. モーダル内の要素にセット
         document.getElementById('modalSubject').textContent = subject;
         document.getElementById('modalDate').textContent = date;
-        document.getElementById('modalBody').innerHTML = bodyContent; // HTMLとして挿入
+        // モーダル本体の rich-text-content クラスで画像サイズ等を制御
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = bodyContent;
+        modalBody.className = 'card-body p-4 rich-text-content';
 
-        // 5. Bootstrapモーダルを表示
         const myModal = new bootstrap.Modal(document.getElementById('messageDetailModal'));
         myModal.show();
     }
@@ -299,7 +396,6 @@
     // 6. 初期化 (ページロード時)
     // ---------------------------------------------------------
     window.addEventListener('load', function() {
-        // Service Workerの登録
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service_worker.js')
             .then(function(reg) {
@@ -310,7 +406,6 @@
             });
         }
 
-        // 通知ボタンのクリックイベント設定
         const btn = document.getElementById('enable-notifications-btn');
         if (btn) {
             btn.addEventListener('click', function() {
@@ -324,24 +419,19 @@
             });
         }
 
-        // URLパラメータ (?open_msg=ID) のチェック
+        // 通知タップ時の自動オープン
         const urlParams = new URLSearchParams(window.location.search);
         const targetMsgId = urlParams.get('open_msg');
 
         if (targetMsgId) {
             console.log("通知から起動しました。Target ID:", targetMsgId);
-
-            // 💡 修正: IDを持つリンク要素を探す
-            // data-target-id="msg-content-{ID}" となっている要素を探します
-            // {ID} はSalesforceのID (例: a0X...)
-            const selector = `a[data-target-id="msg-content-${targetMsgId}"]`;
+            // data-target-id 属性を持つ要素を探す (buttonタグに変更したため修正なしでOKか、セレクタを確認)
+            // 今回は button class="list-group-item..." に属性をつけているので、属性セレクタでヒットします
+            const selector = `[data-target-id="msg-content-${targetMsgId}"]`;
             const targetElement = document.querySelector(selector);
             
             if (targetElement) {
-                // モーダルを開く
                 openMessageModal(targetElement);
-
-                // URLからパラメータを消して綺麗にする
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({path: newUrl}, '', newUrl);
             } else {

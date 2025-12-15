@@ -9,59 +9,156 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Ｔ保証会員さまサイト">
     <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
-    <title>{% block title %}Django Member Site{% endblock %}</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
-          rel="stylesheet" 
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
-          crossorigin="anonymous">
+    <title>{% block title %}T-Guarantee Member Portal{% endblock %}</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
     <style>
-        /* メインコンテンツエリアの下部に少しスペースを確保 */
-        body {
-            padding-top: 56px; /* 固定ナビゲーションバーの高さ分 */
+        :root {
+            /* 配色テーマ: 信頼感のあるネイビーとアクセントのグリーン/ゴールド */
+            --primary-color: #0d253f; /* ダークネイビー */
+            --secondary-color: #1e3c72; /* ロイヤルブルー */
+            --accent-color: #28a745; /* サクセスグリーン */
+            --bg-color: #f4f7f6; /* 薄いグレーの背景 */
+            --text-color: #333;
         }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-top: 70px; /* ナビバーの高さに合わせて調整 */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- ナビゲーションバー --- */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-text {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+        }
+
+        /* --- ボタン --- */
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .btn-warning {
+            color: #212529;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .btn-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* --- メインコンテンツ --- */
         main {
-            padding-bottom: 2rem;
+            flex: 1;
+            padding-bottom: 3rem;
+            /* フェードインアニメーション */
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        /* --- アラート --- */
+        .alert {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* --- フッター --- */
+        .footer {
+            background-color: #fff;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* --- アニメーション定義 --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ユーティリティ --- */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-            <div class="container-fluid">
-                <!-- <a class="navbar-brand" href="{% url 'home' %}"> -->
-                <a class="navbar-brand">
-                    🏢 Ｔ保証会員さまサイト 🏢
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="#"> <i class="bi bi-building-check"></i> Ｔ保証会員さまサイト
                 </a>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-center">
                         {% if user.is_authenticated %}
-                            <li class="nav-item">
-                                <span class="navbar-text me-3">
-                                    ログインユーザー名**{{ user.username }}**
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <form action="{% url 'logout' %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger">
-                                        ログアウト
-                                    </button>
-                                </form>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle fs-5"></i>
+                                    <span>{{ user.username }} 様</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><h6 class="dropdown-header">アカウント設定</h6></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{% url 'logout' %}" method="post" class="px-2">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                                                <i class="bi bi-box-arrow-right"></i> ログアウト
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         {% else %}
                             <li class="nav-item me-2">
-                                <a class="btn btn-outline-light" href="{% url 'login' %}">ログイン</a>
+                                <a class="btn btn-outline-light btn-sm px-3" href="{% url 'login' %}">
+                                    <i class="bi bi-box-arrow-in-right"></i> ログイン
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-warning" href="{% url 'signup' %}">サインアップ</a>
+                                <a class="btn btn-warning btn-sm px-3" href="{% url 'signup' %}">
+                                    <i class="bi bi-pencil-square"></i> サインアップ
+                                </a>
                             </li>
                         {% endif %}
                     </ul>
@@ -72,28 +169,43 @@
 
     <main class="container mt-4">
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                        {% if message.tags == 'success' %}
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        {% elif message.tags == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                        {% endif %}
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
 
         {% block content %}
         {% endblock %}
     </main>
     
-    <footer class="footer mt-auto py-3 bg-light">
+    <footer class="footer mt-auto py-4">
         <div class="container text-center">
-            <span class="text-muted">© 2024 Django Member Site. All rights reserved.</span>
+            <div class="mb-2">
+                <i class="bi bi-building text-secondary fs-4"></i>
+            </div>
+            <span class="text-muted small">© 2024 Django Member Site. All rights reserved.</span>
+            <div class="mt-2">
+                <a href="#" class="text-decoration-none text-muted small mx-2">利用規約</a>
+                <a href="#" class="text-decoration-none text-muted small mx-2">プライバシーポリシー</a>
+                <a href="#" class="text-decoration-none text-muted small mx-2">お問い合わせ</a>
+            </div>
         </div>
     </footer>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-            crossorigin="anonymous"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
