@@ -28,7 +28,7 @@ class SalesforceBackend(BaseBackend):
         # 💡 1. SOQLクエリに IsAdmin__c を追加 💡
         soql_query = (
             f"SELECT Id, IsAdmin__c FROM LeavingGuaranteeContractor__c "
-            f"WHERE Name = '{username}' AND Password__c = '{hashed_password}' IsMovedOut__c = False LIMIT 1"
+            f"WHERE Name = '{username}' AND Password__c = '{hashed_password}' AND IsMovedOut__c = False LIMIT 1"
         )
         
         query_url = f"{instance_url}/services/data/{api_version}/query"
