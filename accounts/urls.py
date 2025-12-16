@@ -4,6 +4,7 @@ from django.urls import path
 from .views import SignUpView, home_view, create_checkout_session_view, send_message_view, send_bulk_message_view, subscribe_push, cancel_subscription_view, manage_payment_method_view
 
 urlpatterns = [
+    path('', home_view, name='dashboard'),
     path('signup/', SignUpView.as_view(), name='signup'),
     path('profile/', home_view, name='home'), 
     path('create-checkout-session/', create_checkout_session_view, name='create_checkout_session'),
