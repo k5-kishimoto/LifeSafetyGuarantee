@@ -15,8 +15,8 @@ User = get_user_model()
 class CustomUserCreationForm(UserCreationForm):
     # ユーザー名とパスワード
     username = forms.EmailField(
-        label='ユーザー名（メールアドレス）', 
-        help_text='メールアドレスを入力してください。',
+        label='メールアドレスをご登録下さい', 
+        #help_text='メールアドレスを入力してください。',
         max_length=150, 
         required=True,
         # HTML5のメール入力フォームを使用（スマホで入力しやすくなります）
@@ -30,7 +30,7 @@ class CustomUserCreationForm(UserCreationForm):
     )
     last_name = forms.CharField(label='姓', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
     first_name = forms.CharField(label='名', max_length=50, required=True, error_messages={'required': '名は必須です。',})
-    password1 = forms.CharField(label='パスワード', widget=PasswordInput, strip=False)
+    password1 = forms.CharField(label='新規パスワードをご登録ください', widget=PasswordInput, strip=False)
     password2 = forms.CharField(label='パスワード（確認用）', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
     
     # 💡 選択リスト 💡
@@ -78,7 +78,7 @@ class CustomUserCreationForm(UserCreationForm):
             'telephone', 
             'address'
         ) 
-        labels = {'username': 'ユーザー名（メールアドレス）'}
+        labels = {'username': 'メールアドレスをご登録下さい'}
 
 from django import forms
 from django_summernote.widgets import SummernoteWidget # インポート
