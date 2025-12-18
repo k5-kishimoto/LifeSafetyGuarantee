@@ -60,17 +60,35 @@
         margin-bottom: 0.5rem;
     }
 
+    /* 🌟 追加CSS: パスワード表示切替ボタン用 */
+    .btn-toggle-password {
+        border-color: #ced4da;
+        background-color: #fff;
+        color: #6c757d;
+        border-left: none; /* 左の線を消して入力欄と一体化 */
+        z-index: 5;
+    }
+    .btn-toggle-password:hover {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        border-color: #ced4da;
+    }
+    .btn-toggle-password:focus {
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.25); /* 入力欄と同じフォーカス色 */
+        border-color: #4e73df;
+    }
+
     /* --- 🌟 モーダルのアニメーション設定 --- */
     
     /* 1. 背景のぼかし効果 */
     .modal-backdrop.show {
-        backdrop-filter: blur(5px); /* 背景をすりガラス状に */
-        opacity: 0.5; /* 黒みの濃さ */
+        backdrop-filter: blur(5px);
+        opacity: 0.5;
     }
 
     /* 2. モーダル本体のスタイル */
     .guide-modal-content {
-        border-radius: 24px; /* 丸みを強く */
+        border-radius: 24px;
         border: none;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         overflow: hidden;
@@ -82,18 +100,16 @@
         opacity: 0;
         transition: all 0.3s ease-in-out;
     }
-    /* モーダルが表示(show)されたときにアニメーション発動 */
     .modal.show .modal-dialog {
         opacity: 1;
         transform: scale(1);
         animation: modalBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 
-    /* バウンスの動き定義: 小さい状態から少し大きくなって戻る */
     @keyframes modalBounce {
         0% { transform: scale(0.5); opacity: 0; }
-        70% { transform: scale(1.05); opacity: 1; } /* 1.05倍まで膨らむ */
-        100% { transform: scale(1); } /* 元に戻る */
+        70% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); }
     }
 
     /* --- モーダル内部のスタイル --- */
@@ -139,7 +155,6 @@
         box-shadow: 0 10px 15px rgba(0,0,0,0.05);
     }
 
-    /* 画像のふわふわアニメーション */
     @keyframes float {
         0% { transform: translateY(0px); }
         50% { transform: translateY(-8px); }
@@ -219,13 +234,23 @@
                                 {{ field.label }}
                                 {% if field.field.required %}<span class="badge bg-danger ms-2 p-1">必須</span>{% endif %}
                             </label>
+                            
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     {% if 'email' in field.name %}<i class="bi bi-envelope"></i>
                                     {% elif 'password' in field.name %}<i class="bi bi-key"></i>
                                     {% else %}<i class="bi bi-pencil"></i>{% endif %}
                                 </span>
-                                {{ field|add_class:"form-control border-start-0" }}
+
+                                {% if 'password' in field.name %}
+                                    {{ field|add_class:"form-control border-start-0 border-end-0" }}
+                                    
+                                    <button type="button" class="btn btn-toggle-password border-start-0" onclick="togglePassword(this)">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                {% else %}
+                                    {{ field|add_class:"form-control border-start-0" }}
+                                {% endif %}
                             </div>
 
                             {% for error in field.errors %}
@@ -329,19 +354,32 @@
 </div>
 
 <script>
+    // 🌟 パスワード表示切替機能 (新規追加)
+    function togglePassword(button) {
+        // ボタンと同じinput-groupの中にある inputタグ を探す
+        const input = button.parentElement.querySelector('input');
+        const icon = button.querySelector('i');
+
+        if (input.type === "password") {
+            input.type = "text"; // 文字を表示
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye'); // アイコンを目が開いた状態に
+        } else {
+            input.type = "password"; // 伏せ字に戻す
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash'); // アイコンを斜線付きに
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // ---------------------------------------------------------
         // 1. Djangoの値を「文字列」として安全に受け取る
-        // ---------------------------------------------------------
         var isBoundStr = "{{ form.is_bound|yesno:'true,false' }}";
         var isBound = (isBoundStr === 'true');
 
         console.log("フォーム送信済み状態(文字列):", isBoundStr);
         console.log("判定結果:", isBound);
 
-        // ---------------------------------------------------------
         // 2. まだ送信されていない(初回表示)場合のみ実行
-        // ---------------------------------------------------------
         if (!isBound) {
             var modalElement = document.getElementById('signupGuideModal');
             
@@ -367,9 +405,7 @@
         }
     });
 
-    // ---------------------------------------------------------
     // ボタン2重押し防止
-    // ---------------------------------------------------------
     (function() {
         var form = document.getElementById('signupForm');
         var button = document.getElementById('submitButton');

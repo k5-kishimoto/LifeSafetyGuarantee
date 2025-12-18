@@ -88,7 +88,7 @@ def cancel_stripe_subscription(username):
     
     try:
         # サブスクリプションのキャンセル実行 (at_period_end=Trueで期間末に解約)
-        stripe.Subscription.cancel(
+        stripe.Subscription.delete(
             subscription_id,
             # at_period_end=True # 期間末にキャンセルする場合はこれを設定
         )
@@ -96,7 +96,7 @@ def cancel_stripe_subscription(username):
         # サービス解約フラグを立てるためにSalesforce連携関数を呼び出す
         # 💡 SalesforceのPaymentStart__cをFalseにする関数を呼び出す 💡
         from .salesforce import update_contractor_payment_status 
-        sf_success = update_contractor_payment_status(username, status=False, isend=True)
+        sf_success = update_contractor_payment_status(username, is_paying=False, isend=True)
         
         if sf_success:
             return True, "StripeとSalesforceでの解約が完了しました。"

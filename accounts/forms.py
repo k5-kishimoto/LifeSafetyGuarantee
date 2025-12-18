@@ -31,7 +31,7 @@ class CustomUserCreationForm(UserCreationForm):
     last_name = forms.CharField(label='姓', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
     first_name = forms.CharField(label='名', max_length=50, required=True, error_messages={'required': '名は必須です。',})
     password1 = forms.CharField(label='新規パスワードをご登録ください', widget=PasswordInput, strip=False)
-    password2 = forms.CharField(label='パスワード（確認用）', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
+    password2 = forms.CharField(label='上記パスワードを再度ご登録ください', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
     
     # 💡 選択リスト 💡
     # 💡 選択リストのフィールドはそのまま定義 💡
