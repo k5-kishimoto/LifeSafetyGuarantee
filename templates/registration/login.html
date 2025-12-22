@@ -80,6 +80,32 @@
         color: #0d6efd;
         text-decoration: underline;
     }
+
+    /* 🌟 追加: パスワード表示ボタン */
+    .btn-toggle-password {
+        border-color: #dee2e6;
+        background-color: #fff;
+        color: #6c757d;
+        border-left: none; 
+        z-index: 5;
+        border-radius: 0 8px 8px 0; /* 右端を丸く */
+        border-width: 1px;
+        border-style: solid;
+    }
+    .btn-toggle-password:hover {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        border-color: #dee2e6;
+    }
+    .btn-toggle-password:focus {
+        box-shadow: none;
+        border-color: #86b7fe;
+    }
+    /* パスワード欄だけは右端の角丸を消す(ボタンと繋げるため) */
+    .form-control.password-field {
+        border-radius: 0; 
+        border-right: none;
+    }
 </style>
 
 <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
@@ -114,6 +140,7 @@
                             <label for="{{ field.id_for_label }}" class="form-label text-muted small fw-bold ms-1">
                                 {{ field.label }}
                             </label>
+                            
                             <div class="input-group">
                                 <span class="input-group-text">
                                     {% if 'password' in field.name %}
@@ -122,8 +149,18 @@
                                         <i class="bi bi-person-fill fs-5"></i>
                                     {% endif %}
                                 </span>
-                                {{ field|add_class:"form-control" }}
+
+                                {% if 'password' in field.name %}
+                                    {{ field|add_class:"form-control password-field" }}
+                                    
+                                    <button type="button" class="btn btn-toggle-password" onclick="togglePassword(this)">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                {% endif %}
                             </div>
+
                             {% if field.errors %}
                                 <div class="text-danger small mt-1 ms-1">
                                     {{ field.errors.0 }}
@@ -162,9 +199,27 @@
         </div>
 
         <div class="text-center text-muted small opacity-50">
-            &copy; 2024 T-Guarantee Member Portal
+            &copy; © 2026 LIFE CORPORATION
         </div>
 
     </div>
 </div>
+
+<script>
+    function togglePassword(button) {
+        // ボタンと同じinput-group内のinput要素を取得
+        const input = button.parentElement.querySelector('input');
+        const icon = button.querySelector('i');
+
+        if (input.type === "password") {
+            input.type = "text"; // 文字を表示
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        } else {
+            input.type = "password"; // 伏せ字に戻す
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        }
+    }
+</script>
 {% endblock %}

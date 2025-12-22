@@ -4,6 +4,38 @@
 {% block title %}不動産管理会社サインアップ{% endblock %}
 
 {% block content %}
+<style>
+    /* 🌟 追加CSS: パスワード表示切替ボタンと入力欄のデザイン */
+    .btn-toggle-password {
+        border-color: #ced4da;
+        background-color: #fff;
+        color: #6c757d;
+        border-left: none; /* 左の線を消して入力欄と一体化 */
+        z-index: 5;
+        border-top-right-radius: 0.375rem; /* Bootstrapのデフォルト丸み */
+        border-bottom-right-radius: 0.375rem;
+    }
+    .btn-toggle-password:hover {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        border-color: #ced4da;
+    }
+    .btn-toggle-password:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* 入力欄と同じフォーカス色 */
+        border-color: #86b7fe;
+        z-index: 10;
+    }
+    
+    /* パスワード入力欄のフォーカス時のスタイル調整 */
+    .input-group:focus-within .form-control {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .input-group:focus-within .btn-toggle-password {
+        border-color: #86b7fe;
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card shadow-lg mt-5">
@@ -31,7 +63,19 @@
                     {% for field in form %}
                         <div class="mb-3">
                             <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field|add_class:"form-control" }}
+                            
+                            {% if 'password' in field.name %}
+                                <div class="input-group">
+                                    {{ field|add_class:"form-control border-end-0" }}
+                                    
+                                    <button type="button" class="btn btn-toggle-password border-start-0" onclick="togglePassword(this)">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </div>
+                            {% else %}
+                                {{ field|add_class:"form-control" }}
+                            {% endif %}
+
                             {% for error in field.errors %}
                                 <div class="text-danger small mt-1">{{ error }}</div>
                             {% endfor %}
@@ -49,20 +93,37 @@
         </div>
     </div>
 </div>
+
 <script>
+    // 🌟 1. パスワード表示切替機能
+    function togglePassword(button) {
+        // ボタンと同じinput-group内のinput要素を取得
+        const input = button.parentElement.querySelector('input');
+        const icon = button.querySelector('i');
+
+        if (input.type === "password") {
+            input.type = "text"; // 文字を表示
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye'); // アイコンを目が開いた状態に
+        } else {
+            input.type = "password"; // 伏せ字に戻す
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash'); // アイコンを斜線付きに
+        }
+    }
+
+    // 🌟 2. ボタン2重押し防止
     (function() {
         const form = document.getElementById('signupForm');
         const button = document.getElementById('submitButton');
 
         if (form && button) {
             form.addEventListener('submit', function(event) {
-                // 1. ボタンを無効化する (これで2回目が押せなくなります)
-                button.disabled = true;
-
-                // 2. ボタンのテキストを変更して、処理中であることを伝える (Bootstrapのスピナーを使用)
-                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
-                
-                // 3. フォームの送信はそのまま続行されます
+                // 送信直後にボタンを無効化
+                setTimeout(function() {
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
+                }, 10);
             });
         }
     })();

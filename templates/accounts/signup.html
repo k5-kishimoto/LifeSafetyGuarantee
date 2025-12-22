@@ -244,7 +244,6 @@
 
                                 {% if 'password' in field.name %}
                                     {{ field|add_class:"form-control border-start-0 border-end-0" }}
-                                    
                                     <button type="button" class="btn btn-toggle-password border-start-0" onclick="togglePassword(this)">
                                         <i class="bi bi-eye-slash"></i>
                                     </button>
@@ -330,11 +329,18 @@
                     <div class="col-lg-5 text-center">
                         <div class="position-relative p-3">
                             <div style="position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; background: #e8f5e9; border-radius: 50%; z-index: 0;"></div>
-                            
                             <img src="{% static 'img/detail.png' %}" class="img-fluid position-relative floating-img" style="z-index: 1;" alt="退去費用保証のイメージ"/>
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-4 p-3 border border-danger border-opacity-25 bg-danger bg-opacity-10 rounded-3">
+                    <p class="mb-0 text-danger fw-bold text-center small">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        退去による保証料のお支払いは、入居してから１８０日の免責期間を超えた場合に限ります
+                    </p>
+                </div>
+
             </div>
 
             <div class="modal-footer border-0 justify-content-center pb-5 pt-0">
@@ -354,32 +360,29 @@
 </div>
 
 <script>
-    // 🌟 パスワード表示切替機能 (新規追加)
+    // パスワード表示切替機能
     function togglePassword(button) {
-        // ボタンと同じinput-groupの中にある inputタグ を探す
         const input = button.parentElement.querySelector('input');
         const icon = button.querySelector('i');
 
         if (input.type === "password") {
-            input.type = "text"; // 文字を表示
+            input.type = "text";
             icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye'); // アイコンを目が開いた状態に
+            icon.classList.add('bi-eye');
         } else {
-            input.type = "password"; // 伏せ字に戻す
+            input.type = "password";
             icon.classList.remove('bi-eye');
-            icon.classList.add('bi-eye-slash'); // アイコンを斜線付きに
+            icon.classList.add('bi-eye-slash');
         }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Djangoの値を「文字列」として安全に受け取る
         var isBoundStr = "{{ form.is_bound|yesno:'true,false' }}";
         var isBound = (isBoundStr === 'true');
 
         console.log("フォーム送信済み状態(文字列):", isBoundStr);
         console.log("判定結果:", isBound);
 
-        // 2. まだ送信されていない(初回表示)場合のみ実行
         if (!isBound) {
             var modalElement = document.getElementById('signupGuideModal');
             
@@ -390,7 +393,6 @@
                             backdrop: 'static',
                             keyboard: false
                         });
-                        // 少し遅延させてアニメーションを見せる演出
                         setTimeout(() => {
                             myModal.show();
                             console.log("モーダルを表示しました");
