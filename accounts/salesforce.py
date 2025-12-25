@@ -57,6 +57,7 @@ def register_salesforce_contractor(contractor_data):
         # "Password__c": hash_password(contractor_data['password']), # ハッシュ化されたパスワード
         "LastName__c": contractor_data['last_name'],
         "FirstName__c": contractor_data['first_name'],
+        "NameKana__c": contractor_data['name_kana'],
         "Supplier__c": contractor_data['contractor_name'], # フォームからはIDが渡される
         "Birthday__c": birthday_str, 
         "PropertyName__c": contractor_data['property_name'],

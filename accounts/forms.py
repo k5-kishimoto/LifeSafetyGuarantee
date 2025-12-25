@@ -30,6 +30,14 @@ class CustomUserCreationForm(UserCreationForm):
     )
     last_name = forms.CharField(label='姓', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
     first_name = forms.CharField(label='名', max_length=50, required=True, error_messages={'required': '名は必須です。',})
+    # 🌟 追加: ふりがな 🌟
+    name_kana = forms.CharField(
+        label='ふりがな', 
+        max_length=50, 
+        required=True, 
+        error_messages={'required': 'ふりがなは必須です。'},
+        widget=forms.TextInput(attrs={'placeholder': 'やまだ たろう'})
+    )
     password1 = forms.CharField(label='新規パスワードをご登録ください', widget=PasswordInput, strip=False)
     password2 = forms.CharField(label='上記パスワードを再度ご登録ください', widget=PasswordInput, strip=False, help_text='パスワードを再入力してください。')
     
@@ -71,6 +79,7 @@ class CustomUserCreationForm(UserCreationForm):
             'username', 
             'last_name',
             'first_name',
+            'name_kana',
             'birthday',
             'contractor_name',  
             'property_name', 
