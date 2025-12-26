@@ -1,6 +1,6 @@
 {
-  "name": "会員サイト",
-  "short_name": "メンバー",
+  "name": "あとさき保証",
+  "short_name": "あとさき",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
