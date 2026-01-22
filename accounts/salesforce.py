@@ -558,7 +558,7 @@ def get_all_agencies_for_choices():
         response.raise_for_status()
         data = response.json()
         
-        choices = [('', '--- 業者名を選択してください ---')]
+        choices = [('', '--- 会社名を選択してください ---')]
         
         for record in data.get('records', []):
             # フォームの選択肢形式 (値, 表示ラベル)

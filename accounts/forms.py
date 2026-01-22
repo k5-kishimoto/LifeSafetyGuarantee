@@ -28,11 +28,11 @@ class CustomUserCreationForm(UserCreationForm):
             'max_length': 'メールアドレスは150文字以内で入力してください。',
         }
     )
-    last_name = forms.CharField(label='姓', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
-    first_name = forms.CharField(label='名', max_length=50, required=True, error_messages={'required': '名は必須です。',})
+    last_name = forms.CharField(label='姓（漢字）', max_length=50, required=True, error_messages={'required': '姓は必須です。',})
+    first_name = forms.CharField(label='名（漢字）', max_length=50, required=True, error_messages={'required': '名は必須です。',})
     # 🌟 追加: ふりがな 🌟
     name_kana = forms.CharField(
-        label='ふりがな', 
+        label='ふりがな（姓名）※全角でご登録ください', 
         max_length=50, 
         required=True, 
         error_messages={'required': 'ふりがなは必須です。'},
@@ -68,10 +68,10 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     # 💡 カスタム項目 💡
-    property_name = forms.CharField(label='物件名', max_length=100, required=True, error_messages={'required': '物件名は必須です。',})
-    room_name = forms.CharField(label='部屋番号', max_length=50, required=True, error_messages={'required': '部屋番号は必須です。',})
-    telephone = forms.CharField(label='電話番号', max_length=15, help_text='ハイフンなしで入力してください', required=True, error_messages={'required': '電話番号は必須です。',})
-    address = forms.CharField(label='住所', widget=forms.Textarea(attrs={'rows': 3}), required=True, error_messages={'required': '住所は必須です。',})
+    property_name = forms.CharField(label='物件名※全角でご登録ください', max_length=100, required=True, error_messages={'required': '物件名は必須です。',})
+    room_name = forms.CharField(label='部屋番号※半角英数でご登録ください', max_length=50, required=True, error_messages={'required': '部屋番号は必須です。',})
+    telephone = forms.CharField(label='電話番号※半角英数でご登録ください', max_length=15, help_text='ハイフンなしで入力してください', required=True, error_messages={'required': '電話番号は必須です。',})
+    address = forms.CharField(label='住所※全角で市町村からご登録ください', widget=forms.Textarea(attrs={'rows': 3}), required=True, error_messages={'required': '住所は必須です。',})
 
     class Meta:
         model = User
