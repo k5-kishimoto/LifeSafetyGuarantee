@@ -9,7 +9,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <h2 class="display-6 text-success mb-3">不動産管理会社ホーム画面へようこそ！ 👷</h2>
-        <p class="lead text-muted">現在ログイン中のユーザー: **{{ user.username }}**</p>
+        <p class="lead text-muted">現在ログイン中のユーザー: <strong>{{ user.username }}</strong></p>
         <hr>
     </div>
 </div>
@@ -19,6 +19,10 @@
         <div class="card shadow">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">会員情報 (全契約者) 一覧</h5>
+                
+                <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#moveOutInfoModal">
+                    <i class="bi bi-info-circle-fill me-1"></i> 入居者が退去した際には
+                </button>
             </div>
             
             <div class="p-3 bg-light border-bottom">
@@ -83,7 +87,6 @@
                                 <td data-value="{{ contractor.move_out_date|default_if_none:'' }}">
                                     {% if contractor.move_out_date %}
                                         <span class="badge bg-danger">退去</span>
-                                        
                                         <span class="ms-1 small text-dark fw-bold">
                                             {{ contractor.move_out_date }}
                                         </span>
@@ -101,9 +104,77 @@
                 </div>
                 {% else %}
                 <div class="p-3 text-center text-muted">
-                    現在、この業者に紐づく会員情報は見つかりませんでした。
+                    現在、この不動産管理会社に紐づく会員情報は見つかりませんでした。
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="moveOutInfoModal" tabindex="-1" aria-labelledby="moveOutInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="moveOutInfoModalLabel">
+                    <i class="bi bi-info-circle-fill me-2"></i>入居者が退去した際のお手続き
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-3 border-bottom pb-2 border-success">
+                    <i class="bi bi-1-circle-fill text-success me-2"></i>退去保証の申請について
+                </h6>
+                <p class="mb-4">
+                    <img src="{% static 'img/supplier.png' %}" class="img-fluid position-relative floating-img" style="z-index: 1;" alt="退去費用保証のイメージ"/>
+                    入居者様が退去された場合は、速やかに弊社までご連絡ください。<br>
+                    以下のいずれかの方法で申請をお願いいたします。
+                </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm bg-light">
+                            <div class="card-body text-center">
+                                <i class="bi bi-telephone-fill text-success fs-1 mb-2"></i>
+                                <h6 class="fw-bold">お電話でのご連絡</h6>
+                                <p class="mb-0 fs-5 fw-bold text-dark">098-850-2222</p>
+                                <small class="text-muted">（受付時間：平日 9:00 - 18:00）</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm bg-light">
+                            <div class="card-body text-center">
+                                <i class="bi bi-envelope-fill text-success fs-1 mb-2"></i>
+                                <h6 class="fw-bold">メールでのご連絡</h6>
+                                <p class="mb-0">
+                                    <a href="mailto:info@life-okinawa.jp" class="text-decoration-none fw-bold">info@life-okinawa.jp</a>
+                                </p>
+                                <small class="text-muted">（24時間受付）</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 border-bottom pb-2 border-success">
+                    <i class="bi bi-2-circle-fill text-success me-2"></i>必要な書類
+                </h6>
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item"><i class="bi bi-check-lg text-success me-2"></i>退去精算書（写し）</li>
+                    <li class="list-group-item"><i class="bi bi-check-lg text-success me-2"></i>原状回復費用の請求書（写し）</li>
+                    <li class="list-group-item"><i class="bi bi-check-lg text-success me-2"></i>退去時の室内写真</li>
+                </ul>
+
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-3 fs-4"></i>
+                    <div>
+                        <strong>ご注意ください：</strong><br>
+                        退去日から<strong>90日以内</strong>にご連絡がない場合、保証の対象外となることがございます。
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
             </div>
         </div>
     </div>
@@ -113,7 +184,6 @@
     th.sortable { cursor: pointer; position: relative; }
     th.sortable:hover { background-color: #f1f1f1; }
     .sort-icon { font-size: 0.8em; margin-left: 5px; color: #ccc; }
-    /* 検索ボックスのフォーカス時のスタイル調整 */
     #searchInput:focus { box-shadow: none; border-color: #ced4da; }
     .input-group:focus-within { box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25); border-radius: 0.375rem; }
 </style>
@@ -123,20 +193,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const table = document.getElementById('sortableTable');
     if (!table) return;
 
-    // ==========================================
-    // 🔍 2. フィルター機能の追加
-    // ==========================================
+    // 検索機能
     const searchInput = document.getElementById('searchInput');
-    
     searchInput.addEventListener('keyup', function() {
         const searchText = searchInput.value.toLowerCase();
         const rows = table.querySelectorAll('tbody tr');
-
         rows.forEach(row => {
-            // その行のすべてのテキストを取得して小文字に変換
             const rowText = row.innerText.toLowerCase();
-            
-            // 検索ワードが含まれていれば表示、なければ非表示
             if (rowText.includes(searchText)) {
                 row.style.display = '';
             } else {
@@ -145,13 +208,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ==========================================
-    // 🔃 ソート機能 (既存のコード)
-    // ==========================================
+    // ソート機能
     const headers = table.querySelectorAll('th.sortable');
     const tableBody = table.querySelector('tbody');
-    // 注意: sortするときは「現在のDOM」から取得する必要があるため、
-    // const rows = ... と固定するのではなく、イベント内で取得するように少し書き換えます
 
     headers.forEach((header, index) => {
         header.addEventListener('click', () => {
@@ -168,7 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
             header.querySelector('.sort-icon').textContent = currentIsAscending ? '↓' : '↑';
             header.querySelector('.sort-icon').style.color = '#333';
 
-            // 常に最新の行リストを取得してソート
             const currentRows = Array.from(tableBody.querySelectorAll('tr'));
 
             const sortedRows = currentRows.sort((a, b) => {
