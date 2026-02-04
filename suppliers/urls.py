@@ -28,4 +28,7 @@ urlpatterns = [
 
     # ホーム画面 (変更なし)
     path('', views.home_view, name='home'),
+
+    # 💡 この行を追加してください
+    path('update_move_out/', views.update_move_out, name='update_move_out'),
 ]

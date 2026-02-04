@@ -1,10 +1,8 @@
-# suppliers/salesforce.py
-
 import requests
 import json
 from django.conf import settings
 
-# 💡 Client Credentials Flow認証トークンを取得する関数 (既存ロジックを流用)
+# 1. 認証トークン取得
 def get_auth_token():
     """API接続用のアクセストークンを取得する"""
     url = f"{settings.SF_INSTANCE_URL}/services/oauth2/token"
@@ -20,7 +18,6 @@ def get_auth_token():
 
     try:
         response = requests.post(url, data=payload)
-        # ネットワークエラーや4xx, 5xxエラーをキャッチするためにraise_for_status()を使用
         response.raise_for_status() 
         data = response.json()
         return data.get('access_token'), data.get('instance_url'), ""
@@ -28,6 +25,7 @@ def get_auth_token():
         return None, None, str(e)
 
 
+# 2. 業者ログイン認証
 def authenticate_salesforce_agency(username, password):
     """
     EvictionGuaranteeAgency__cオブジェクトのNameとPassword__cで認証を行う。
@@ -46,8 +44,7 @@ def authenticate_salesforce_agency(username, password):
     }
 
     try:
-        # 💡 SOQLでNameとPassword__cを検索 💡
-        # 🚨 パスワードはSalesforce側で平文保存・比較が前提
+        # SOQLでUsername__cとPassword__cを検索
         soql_query = (
             f"SELECT Name FROM EvictionGuaranteeAgency__c "
             f"WHERE Username__c = '{username}' AND Password__c = '{password}' LIMIT 1"
@@ -66,7 +63,9 @@ def authenticate_salesforce_agency(username, password):
     except Exception as e:
         print(f"Agency Authentication Error: {e}")
         return False
-    
+
+
+# 3. 業者に紐づく契約者一覧取得
 def get_contractors_for_agency(agency_username):
     """
     AgencyのName (username) を元に、紐づくLeavingGuaranteeContractor__cのリストを取得する。
@@ -95,10 +94,12 @@ def get_contractors_for_agency(agency_username):
         
         agency_id = data_agency['records'][0]['Id']
 
-        # 2. 取得したAgency IDを使って、紐づくContractorを取得 (Supplier__cでフィルタ)
-        # 💡 表示したいフィールドを SOQL で指定します 💡
+        # 2. 取得したAgency IDを使って、紐づくContractorを取得
         soql_contractors = (
-            f"SELECT Name, Fullname__c, PropertyName__c, RoomName__c, Telephone__c, MoveInDate__c, PaymentStart__c, IsMovedOut__c, MovedOutDate__c, IsCancel__c, AssurancePrice__c, CumulativeOccupancyMonths__c, PayingStatus__c "
+            f"SELECT Id, Name, Fullname__c, PropertyName__c, RoomName__c, Telephone__c, "
+            f"MoveInDate__c, PaymentStart__c, IsMovedOut__c, MovedOutDate__c, IsCancel__c, "
+            f"AssurancePrice__c, CumulativeOccupancyMonths__c, PayingStatus__c, MoveOutByContractor__c, "
+            f"IsAssurancePaying__c "  # 追加フィールド
             f"FROM LeavingGuaranteeContractor__c "
             f"WHERE Supplier__c = '{agency_id}' AND IsAssurancePaying__c = False "
             f"ORDER BY RoomName__c, PropertyName__c DESC"
@@ -111,8 +112,8 @@ def get_contractors_for_agency(agency_username):
         contractors = []
         for record in data_contractors.get('records', []):
             contractors.append({
-                # Nameは契約者のユーザー名として使用されることが多いため、IDとして利用
-                'id': record['Name'], 
+                'sf_id': record['Id'], # Salesforce ID (更新用)
+                'id': record['Name'],  # 表示用ID (C-xxxx)
                 'full_name': record.get('Fullname__c', 'N/A'),
                 'property_name': record.get('PropertyName__c', 'N/A'),
                 'room_name': record.get('RoomName__c', 'N/A'),
@@ -125,6 +126,8 @@ def get_contractors_for_agency(agency_username):
                 'months': record.get('CumulativeOccupancyMonths__c'),
                 'assurance_price': record.get('AssurancePrice__c'),
                 'paying_status': record.get('PayingStatus__c'),
+                'move_out_by_contractor': record.get('MoveOutByContractor__c', False), 
+                'is_assurance_paying': record.get('IsAssurancePaying__c', False),
             })
             
         return contractors
@@ -135,7 +138,9 @@ def get_contractors_for_agency(agency_username):
     except Exception as e:
         print(f"Salesforce Contractor Fetch Error: {e}")
         return []
-    
+
+
+# 4. 業者アカウント登録 (不足していた関数)
 def register_salesforce_agency(agency_data):
     """EvictionGuaranteeAgency__c レコードを作成 (業者サインアップ)"""
     
@@ -147,7 +152,6 @@ def register_salesforce_agency(agency_data):
     api_version = 'v58.0'
     sobject_url = f"{instance_url}/services/data/{api_version}/sobjects/EvictionGuaranteeAgency__c"
 
-    # 💡 パスワードはPassword__cに平文で格納 💡
     payload = {
         "Username__c": agency_data['username'],
         "Password__c": agency_data['password1'], 
@@ -171,3 +175,38 @@ def register_salesforce_agency(agency_data):
 
     except requests.exceptions.RequestException as e:
         return False, f"Salesforce API接続エラー: {e}"
+
+
+# 5. 退去確認フラグ更新
+def update_move_out_status(sf_id):
+    """
+    指定されたSalesforce ID (LeavingGuaranteeContractor__c) の
+    MoveOutByContractor__c を True に更新する。
+    """
+    auth_result = get_auth_token()
+    token, instance_url, error = auth_result
+    if not token:
+        return False, f"認証エラー: {error}"
+
+    api_version = 'v58.0'
+    sobject_url = f"{instance_url}/services/data/{api_version}/sobjects/LeavingGuaranteeContractor__c/{sf_id}"
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+    }
+
+    payload = {
+        "MoveOutByContractor__c": True
+    }
+
+    try:
+        response = requests.patch(sobject_url, headers=headers, data=json.dumps(payload))
+        
+        if response.status_code == 204:
+            return True, "更新成功"
+        else:
+            return False, f"Salesforce更新失敗: {response.text}"
+
+    except Exception as e:
+        return False, f"API接続エラー: {e}"
