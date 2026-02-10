@@ -277,20 +277,9 @@ SUMMERNOTE_CONFIG = {
     }
 }
 
-
-# config/settings.py (メール関連の設定)
-
-# 💡 サイトのドメイン名とプロトコルの設定 💡
-# 公開ドメイン、またはローカルホスト（http）を使用
-DOMAIN = '127.0.0.1:8000' # ローカルテスト用。公開デプロイ時は 'lifesafetyguarantee.fly.dev' にする
-SITE_NAME = '会員サイト'
-
 # 外部プロキシ（Fly.ioなど）を使用している場合は必須
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# 💡 開発環境用: メールをターミナルに出力する設定 💡
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # iframeを使用している場合、iframe内の表示を許可する
 X_FRAME_OPTIONS = 'SAMEORIGIN' 
@@ -307,9 +296,23 @@ VAPID_PUBLIC_KEY = 'BBuYPYX9LFJik5msd8w5Rnhf5d0jj4DKpu9klmkDBqq0DhilLK9FyiZ8KAFy
 VAPID_PRIVATE_KEY = 'erdqpRXihfjvCkLhOM_HxmttIDaev2lvf2Ww01VFVhY'
 VAPID_ADMIN_EMAIL = 'mailto:k-kishimoto@life-okinawa.jp' # あなたのメールアドレス
 
-DEFAULT_AUTO_EMAIL = '自分のメールアドレス@gmail.com'
+# config/settings.py (メール関連の設定)
+
+# 💡 サイトのドメイン名とプロトコルの設定 💡
+# 公開ドメイン、またはローカルホスト（http）を使用
+DOMAIN = 'lifesafetyguarantee.fly.dev' # ローカルテスト用。公開デプロイ時は 'lifesafetyguarantee.fly.dev' にする
+SITE_NAME = 'あとさき保証'
+
+# 💡 開発環境用: メールをターミナルに出力する設定 💡
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# 👇 実際に送信する場合
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Gmailの設定例 (環境変数から読み込むのが安全です)
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '自分のメールアドレス@gmail.com'
-EMAIL_HOST_PASSWORD = '自分のパスワード'
+# 環境変数または直接記述（テスト用）
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your_email@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your_app_password') # アプリパスワード
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
