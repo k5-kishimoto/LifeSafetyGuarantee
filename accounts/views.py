@@ -405,7 +405,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     
 class DebugPasswordResetView(PasswordResetView):
     # 💡 修正箇所 1: domain_override をクラス属性として設定 💡
-    domain_override = '127.0.0.1:8000'
+    domain_override = None
     
     # 💡 修正箇所 2: テンプレート名もクラス属性として設定 (urls.pyから移動) 💡
     email_template_name = 'registration/password_reset_email.html'
